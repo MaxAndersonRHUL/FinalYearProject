@@ -13,7 +13,6 @@ import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
-import org.w3c.dom.events.Event;
 
 /**
  * Created by max on 17/10/2016.
@@ -106,10 +105,25 @@ public class GridWorldLauncher extends Application {
         primaryStage.setScene(new Scene(root));
         primaryStage.show();
     }
+
+    public static void setupGridViewFromVariables() {
+        GridWorldModel model = GridWorldModel.getInstance();
+        GridWorldView view = GridWorldView.getInstance();
+
+        model.setGridSizeX(Integer.parseInt(GridWorldLauncher.gridSizeXField.getCharacters().toString()));
+        model.setGridSizeY(Integer.parseInt(GridWorldLauncher.gridSizeYField.getCharacters().toString()));
+        view.setGridCellSize(Integer.parseInt(GridWorldLauncher.gridCellSizeField.getCharacters().toString()));
+        view.setArrowSize(Integer.parseInt(GridWorldLauncher.gridArrowSizeField.getCharacters().toString()));
+        view.setTextSize(Integer.parseInt(GridWorldLauncher.gridFontSizeField.getCharacters().toString()));
+
+    }
+
 }
 
 class creatorButtonHandler implements EventHandler<ActionEvent> {
     public void handle(ActionEvent event) {
+        GridWorldLauncher.setupGridViewFromVariables();
+        GridWorldModel.getInstance().setupEmptyGrid();
         GridWorldCreator.getInstance().start(GridWorldLauncher.primaryStage);
     }
 }
@@ -118,14 +132,10 @@ class startButtonHandler implements EventHandler<ActionEvent> {
     //When the start button is clicked on the main menu.
     public void handle(ActionEvent event) {
 
-        GridWorldModel.getInstance().setGridSizeX(Integer.parseInt(GridWorldLauncher.gridSizeXField.getCharacters().toString()));
-        GridWorldModel.getInstance().setGridSizeY(Integer.parseInt(GridWorldLauncher.gridSizeYField.getCharacters().toString()));
-        GridWorldView.getInstance().setGridCellSize(Integer.parseInt(GridWorldLauncher.gridCellSizeField.getCharacters().toString()));
-        GridWorldView.getInstance().setArrowSize(Integer.parseInt(GridWorldLauncher.gridArrowSizeField.getCharacters().toString()));
-        GridWorldView.getInstance().setTextSize(Integer.parseInt(GridWorldLauncher.gridFontSizeField.getCharacters().toString()));
+        GridWorldLauncher.setupGridViewFromVariables();
 
-        GridWorldModel.getInstance().setupBasicGrid();
         GridWorldQLearning.getInstance().setIterationSpeed(Integer.parseInt(GridWorldLauncher.learningIterationSpeedField.getCharacters().toString()));
+        GridWorldModel.getInstance().setupFullGrid();
         GridWorldView.getInstance().start(GridWorldLauncher.primaryStage);
 
     }

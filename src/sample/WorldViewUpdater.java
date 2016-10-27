@@ -15,13 +15,14 @@ public class WorldViewUpdater extends AnimationTimer {
 
 
         framesPassed++;
-        if(framesPassed%10 == 0) {
-            GridWorldView.getInstance().setFpsText((int) (1/((now - frameBefore)/ 1000000000.0)));
+        if (framesPassed % 10 == 0) {
+            GridWorldView.getInstance().setFpsText((int) (1 / ((now - frameBefore) / 1000000000.0)));
             int simRate = GridWorldQLearning.getInstance().getAverageIterationRate();
             GridWorldView.getInstance().setSimRateText(simRate);
         }
         frameBefore = now;
         GridWorldView.getInstance().redraw();
+        GridWorldView.getInstance().drawAgent();
 
     }
 }

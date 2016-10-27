@@ -1,10 +1,10 @@
 package sample;
 
-import sun.awt.image.ImageWatched;
-
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.ConcurrentLinkedDeque;
-import java.util.stream.Collectors;
 
 /**
  * Created by max on 18/10/2016.
@@ -28,7 +28,7 @@ public class GridWorldQLearning {
     }
 
     public static GridWorldQLearning getInstance() {
-        if(instance == null) {
+        if (instance == null) {
             instance = new GridWorldQLearning();
         }
         return instance;
@@ -37,21 +37,24 @@ public class GridWorldQLearning {
     public void setIterationSpeed(int iterationsPerSecond) {
         targetFPS = iterationsPerSecond;
         evoRate = 1000000000 / targetFPS;
+
+        forAverageIterationRate.clear();
     }
 
     private int calculateAverage(ConcurrentLinkedDeque<Integer> valList) {
-        int sum = 0;
-        if(!valList.isEmpty()) {
+        double sum = 0;
+        if (!valList.isEmpty()) {
             for (Integer mark : valList) {
                 sum += mark;
             }
-            return sum / valList.size();
+            // Round up
+            return (int) ((sum / valList.size()) + 0.5 ) ;
         }
-        return sum;
+        return 0;
     }
 
     private void addValueToRateList(int val) {
-        if(forAverageIterationRate.size() > evoRate) {
+        if (forAverageIterationRate.size() > evoRate) {
             forAverageIterationRate.removeFirst();
         }
         forAverageIterationRate.addLast(val);
@@ -64,22 +67,22 @@ public class GridWorldQLearning {
     private void runTestThread() {
         new Thread() {
             public void run() {
-                while(true) {
+                while (true) {
                     long now = System.nanoTime();
                     long updateLength = now - timeSaveTemp;
-                    addValueToRateList((int) (1/((now - timeSaveTemp)/ 1000000000.0)));
+                    addValueToRateList((int) (1 / ((now - timeSaveTemp) / 1000000000.0)));
                     timeSaveTemp = now;
 
-                    long sleepTime = (timeSaveTemp-System.nanoTime() + evoRate)/1000000;
-                    if(sleepTime > 0) {
+                    long sleepTime = (timeSaveTemp - System.nanoTime() + evoRate) / 1000000;
+                    if (sleepTime > 0) {
                         try {
                             Thread.sleep(sleepTime);
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
                     }
-                    makeActionChoice();
-                    //model.moveAgentRandom();
+                    //makeActionChoice();
+                    model.moveAgentRandom();
                     updateQValues();
 
                 }
@@ -103,7 +106,7 @@ public class GridWorldQLearning {
 
     private double sumOfArray(ArrayList<Double> list) {
         double sum = 0;
-        for(Double d : list) {
+        for (Double d : list) {
             sum = sum + d;
         }
         return sum;
@@ -111,15 +114,15 @@ public class GridWorldQLearning {
 
     private void makeActionChoice() {
         State cs = model.getAgent().currentState;
-        if(cs.getActions().size() <= 0) {
+        if (cs.getActions().size() <= 0) {
             return;
         }
 
         double max = 0;
         int index = 0;
         ArrayList<Double> kPowerActionValues = new ArrayList<>();
-        for(Action act : cs.getActions()) {
-            if(act.getValue() > max) {
+        for (Action act : cs.getActions()) {
+            if (act.getValue() > max) {
                 max = act.getValue();
                 break;
             }
@@ -127,7 +130,7 @@ public class GridWorldQLearning {
             kPowerActionValues.add(Math.pow(explorationValue, (act.getValue())));
         }
 
-        if(max == 0) {
+        if (max == 0) {
             model.moveAgentRandom();
             return;
         }
@@ -136,8 +139,8 @@ public class GridWorldQLearning {
         double sumValues = sumOfArray(kPowerActionValues);
 
         HashMap<Double, Action> probabilities = new HashMap<Double, Action>();
-        for(int i = 0; i < kPowerActionValues.size(); i++) {
-            Double value = kPowerActionValues.get(i)/sumValues;
+        for (int i = 0; i < kPowerActionValues.size(); i++) {
+            Double value = kPowerActionValues.get(i) / sumValues;
             probabilities.put(value, cs.getActions().get(i));
             //System.out.println("Probability: " + value + " QValue: " + cs.getActions().get(i).value);
         }
@@ -156,13 +159,13 @@ public class GridWorldQLearning {
     private void updateQValues() {
         Action highestAct = model.highestValueFromState(model.getAgent().currentState);
         double highestVal = 0;
-        if(highestAct != null) {
+        if (highestAct != null) {
             highestVal = highestAct.value;
         }
         double reward = model.getAgent().currentState.reward;
         Action lastAction = model.getAgent().getLastActionTaken();
-        if(lastAction != null) {
-            lastAction.value = (decayValue*highestVal) + reward;
+        if (lastAction != null) {
+            lastAction.value = (decayValue * highestVal) + reward;
         }
     }
 
@@ -171,7 +174,7 @@ public class GridWorldQLearning {
         int numY = rng.nextInt(model.getGridWorldStates().length);
         int numX = rng.nextInt(model.getGridWorldStates()[0].length);
         ArrayList<Action> acts = model.getGridWorldStates()[numY][numX].getActions();
-        if(acts.size() > 0) {
+        if (acts.size() > 0) {
             acts.remove(rng.nextInt(acts.size()));
         }
     }

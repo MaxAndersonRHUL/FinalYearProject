@@ -2,8 +2,6 @@ package sample;
 
 import javafx.scene.paint.Color;
 
-import java.util.ArrayList;
-
 /**
  * Created by max on 19/10/2016.
  */

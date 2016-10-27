@@ -1,6 +1,5 @@
 package sample;
 
-import javafx.geometry.Rectangle2D;
 import javafx.scene.paint.Color;
 
 /**
@@ -24,8 +23,12 @@ public class GridWorldState extends State {
         return true;
     }
 
+    public void removeAction(Action act) {
+        actions.remove(act);
+    }
+
     public String toString() {
-        return "I am a normal grid state";
+        return "GridWorldState[ X: " + x + " Y: " + y  + " ]";
     }
 
     public Color getStateColor() {
@@ -35,6 +38,5 @@ public class GridWorldState extends State {
     public void setStateColor(Color color) {
         stateColor = color;
     }
-
 
 }
