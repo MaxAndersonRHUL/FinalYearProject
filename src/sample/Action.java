@@ -24,4 +24,8 @@ public class Action {
         value = newValue;
     }
 
+    public String toString() {
+        return "Action[ Result State: " + resultingState + " ]";
+    }
+
 }

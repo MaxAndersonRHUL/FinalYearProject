@@ -1,5 +1,7 @@
 package sample;
 
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Pos;
@@ -7,6 +9,7 @@ import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
+import javafx.scene.control.Slider;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -65,12 +68,33 @@ public class GridWorldView {
         Button setSimRateButton = new Button("Set");
         setSimRateButton.setOnAction(new editSimRate());
 
+        Text sliderLabel = new Text();
+        sliderLabel.prefWidth(200);
+
+        Slider slider = new Slider(0,2,0.5);
+        slider.setShowTickLabels(true);
+        slider.setShowTickMarks(true);
+        slider.setMajorTickUnit(0.25);
+        slider.setMinorTickCount(5);
+        slider.setSnapToTicks(true);
+        slider.setPrefSize(300,30);
+
+        // Code for observing and changing slider value taken from: http://stackoverflow.com/questions/26552495/javafx-set-slider-value-after-dragging-mouse-button
+        // By Stackoverflow user: James_D
+        slider.valueProperty().addListener(new ChangeListener<Number>() {
+            @Override
+            public void changed(ObservableValue<? extends Number> source, Number oldValue, Number newValue) {
+                double finalValue = Math.round( slider.getValue() * 100.0 ) / 100.0;
+                sliderLabel.setText(String.format("%1$,.2f", finalValue));
+                GridWorldQLearning.getInstance().setExploValue(finalValue);
+            } });
+
         this.primaryStage = primaryStage;
         canvas = new Canvas();
         setCanvasSize(canvas);
         graphicsCont = canvas.getGraphicsContext2D();
 
-        editVariables.getChildren().addAll(setSimRateText, setSimRateField, setSimRateButton);
+        editVariables.getChildren().addAll(setSimRateText, setSimRateField, setSimRateButton, slider, sliderLabel);
 
         statusText.getChildren().addAll(fpsText, simRateText);
 

@@ -1,9 +1,6 @@
 package sample;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.ConcurrentLinkedDeque;
 
 /**
@@ -18,13 +15,21 @@ public class GridWorldQLearning {
     private int targetFPS = 8;
     private long evoRate = 1000000000 / targetFPS;
     private double decayValue = 0.85;
-    private double explorationValue = 0.1;
+    private double explorationValue = 2;
 
     private ConcurrentLinkedDeque<Integer> forAverageIterationRate = new ConcurrentLinkedDeque<Integer>();
 
     private GridWorldQLearning() {
         model = GridWorldModel.getInstance();
         runTestThread();
+    }
+
+    public void setExploValue(double value) {
+        if(value < 0.01) {
+            explorationValue = 0.01;
+            return;
+        }
+        explorationValue = value;
     }
 
     public static GridWorldQLearning getInstance() {
@@ -81,8 +86,8 @@ public class GridWorldQLearning {
                             e.printStackTrace();
                         }
                     }
-                    //makeActionChoice();
-                    model.moveAgentRandom();
+                    makeActionChoice();
+                    //model.moveAgentRandom();
                     updateQValues();
 
                 }
@@ -104,9 +109,9 @@ public class GridWorldQLearning {
         } else return a * intPow(a * a, b / 2); //odd  a=a*(a^2)^b/2
     }
 
-    private double sumOfArray(ArrayList<Double> list) {
+    private double sumOfArray(Set<Double> set) {
         double sum = 0;
-        for (Double d : list) {
+        for (Double d : set) {
             sum = sum + d;
         }
         return sum;
@@ -119,41 +124,53 @@ public class GridWorldQLearning {
         }
 
         double max = 0;
-        int index = 0;
-        ArrayList<Double> kPowerActionValues = new ArrayList<>();
+        HashMap<Double, Action> kPowerActionValues = new HashMap<>();
         for (Action act : cs.getActions()) {
             if (act.getValue() > max) {
                 max = act.getValue();
-                break;
             }
-            index++;
-            kPowerActionValues.add(Math.pow(explorationValue, (act.getValue())));
+            kPowerActionValues.put(Math.pow(explorationValue, (act.getValue())), act);
         }
 
         if (max == 0) {
             model.moveAgentRandom();
             return;
         }
-        model.getAgent().doAction(cs.getActions().get(index));
 
-        double sumValues = sumOfArray(kPowerActionValues);
+        double sumValues = sumOfArray(kPowerActionValues.keySet());
 
-        HashMap<Double, Action> probabilities = new HashMap<Double, Action>();
-        for (int i = 0; i < kPowerActionValues.size(); i++) {
-            Double value = kPowerActionValues.get(i) / sumValues;
-            probabilities.put(value, cs.getActions().get(i));
-            //System.out.println("Probability: " + value + " QValue: " + cs.getActions().get(i).value);
+        HashMap<Double, Action> temp = new HashMap<>();
+
+        double total = 0;
+        for(Iterator<Map.Entry<Double, Action>> it = kPowerActionValues.entrySet().iterator(); it.hasNext(); ) {
+            Map.Entry<Double, Action> entry = it.next();
+            Double value = (entry.getKey() / sumValues);
+            temp.put(value, entry.getValue());
+
+            it.remove();
+            total = total + value;
+        }
+
+        for (Map.Entry<Double, Action> entry : temp.entrySet()) {
+            kPowerActionValues.put(entry.getKey(), entry.getValue());
         }
 
         Random random = new Random();
-        int ran = random.nextInt(1000);
+        System.out.println(total);
+        int ran = random.nextInt((int) (total * 1000.0));
 
-        probabilities.entrySet().stream()
-                .sorted(Map.Entry.<Double, Action>comparingByKey())
-                .forEachOrdered(x -> probabilities.put(x.getKey(), x.getValue()));
 
-        Action chosenAct = null;
         double cumulative = 0;
+        for (Map.Entry<Double, Action> entry : kPowerActionValues.entrySet()) {
+            cumulative = cumulative + (entry.getKey()*1000.0);
+            System.out.println("DUB: " + entry.getKey() + " CUMULA: " + cumulative + " RAN: " + ran + " CURRENT STATE: " + model.getAgent().currentState + " ACTION: " + entry.getValue());
+            if(ran < cumulative) {
+                model.getAgent().doAction(entry.getValue());
+                System.out.println("Breaking");
+                break;
+            }
+        }
+        System.out.println("############# END ##############");
     }
 
     private void updateQValues() {
