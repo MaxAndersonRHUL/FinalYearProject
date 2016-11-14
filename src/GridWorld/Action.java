@@ -1,4 +1,4 @@
-package sample;
+package GridWorld;
 
 /**
  * Created by max on 16/10/2016.

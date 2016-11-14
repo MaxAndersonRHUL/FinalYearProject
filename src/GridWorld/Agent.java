@@ -1,4 +1,4 @@
-package sample;
+package GridWorld;
 
 import java.util.LinkedList;
 
