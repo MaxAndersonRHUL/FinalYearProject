@@ -58,17 +58,17 @@ public class GridWorldLauncher extends Application {
         HBox gridCellSize = new HBox(10);
         Text gridCellSizeText = new Text("Grid Cell Size: ");
         gridCellSizeText.setFont(stdFont);
-        gridCellSizeField = new TextField("180");
+        gridCellSizeField = new TextField("100");
 
         HBox gridArrowSize = new HBox(10);
         Text gridArrowSizeText = new Text("Grid Arrow Size: ");
         gridArrowSizeText.setFont(stdFont);
-        gridArrowSizeField = new TextField("18");
+        gridArrowSizeField = new TextField("14");
 
         HBox gridFontSize = new HBox(10);
         Text gridFontSizeText = new Text("Grid Font Size: ");
         gridFontSizeText.setFont(stdFont);
-        gridFontSizeField = new TextField("20");
+        gridFontSizeField = new TextField("16");
 
         HBox learningIterationSpeed = new HBox(10);
         Text learningIterationSpeedText = new Text("Target iterations per second: ");

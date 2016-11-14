@@ -71,10 +71,10 @@ public class GridWorldView {
         Text sliderLabel = new Text();
         sliderLabel.prefWidth(200);
 
-        Slider slider = new Slider(0,2,0.5);
+        Slider slider = new Slider(0.9,1.1,0.99);
         slider.setShowTickLabels(true);
         slider.setShowTickMarks(true);
-        slider.setMajorTickUnit(0.25);
+        slider.setMajorTickUnit(0.025);
         slider.setMinorTickCount(5);
         slider.setSnapToTicks(true);
         slider.setPrefSize(300,30);

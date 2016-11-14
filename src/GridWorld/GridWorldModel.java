@@ -61,7 +61,7 @@ public class GridWorldModel {
                 states[y][x] = new GridWorldState(x, y);
             }
         }
-        states[2][2].setReward(100);
+        states[2][2].setReward(5);
     }
 
     public void fillActions() {
