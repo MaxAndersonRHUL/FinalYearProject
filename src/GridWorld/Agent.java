@@ -12,6 +12,7 @@ public class Agent {
 
     private final int MAX_ACTIONS_HISTORY = 100;
 
+
     public Agent() {
         actionsTaken = new LinkedList<Action>();
     }
