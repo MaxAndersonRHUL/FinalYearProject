@@ -68,7 +68,7 @@ public class GridWorldLauncher extends Application {
         HBox gridFontSize = new HBox(10);
         Text gridFontSizeText = new Text("Grid Font Size: ");
         gridFontSizeText.setFont(stdFont);
-        gridFontSizeField = new TextField("16");
+        gridFontSizeField = new TextField("14");
 
         HBox learningIterationSpeed = new HBox(10);
         Text learningIterationSpeedText = new Text("Target iterations per second: ");
