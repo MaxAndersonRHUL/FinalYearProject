@@ -1,4 +1,4 @@
-package GridWorld;
+package gridWorld;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedDeque;

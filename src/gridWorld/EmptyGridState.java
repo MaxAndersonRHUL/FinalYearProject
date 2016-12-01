@@ -1,4 +1,4 @@
-package GridWorld;
+package gridWorld;
 
 import javafx.scene.paint.Color;
 

@@ -1,4 +1,4 @@
-package GridWorld;
+package gridWorld;
 
 import javafx.application.Application;
 import javafx.event.ActionEvent;

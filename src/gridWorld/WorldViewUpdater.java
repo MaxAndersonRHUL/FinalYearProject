@@ -1,4 +1,4 @@
-package GridWorld;
+package gridWorld;
 
 import javafx.animation.AnimationTimer;
 

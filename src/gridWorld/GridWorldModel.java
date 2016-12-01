@@ -1,4 +1,4 @@
-package GridWorld;
+package gridWorld;
 
 import java.util.ArrayList;
 import java.util.Random;
@@ -61,7 +61,7 @@ public class GridWorldModel {
                 states[y][x] = new GridWorldState(x, y);
             }
         }
-        states[2][2].setReward(5);
+        states[1][1].setReward(5);
     }
 
     public void fillActions() {

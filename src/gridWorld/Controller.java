@@ -1,4 +1,4 @@
-package GridWorld;
+package gridWorld;
 
 public class Controller {
 }

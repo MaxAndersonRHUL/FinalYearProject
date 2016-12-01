@@ -1,4 +1,4 @@
-package GridWorld;
+package gridWorld;
 
 /**
  * Created by max on 16/10/2016.

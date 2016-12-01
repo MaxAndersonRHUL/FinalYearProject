@@ -1,4 +1,4 @@
-package GridWorld;
+package gridWorld;
 
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -51,7 +51,7 @@ public class GridWorldView {
     Color rightTransitionColor = Color.GRAY;
 
     public void start(Stage primaryStage) {
-        //Parent root = FXMLLoader.load(getClass().getResource("GridWorld.fxml"));
+        //Parent root = FXMLLoader.load(getClass().getResource("gridWorld.fxml"));
 
         instance = this;
 
