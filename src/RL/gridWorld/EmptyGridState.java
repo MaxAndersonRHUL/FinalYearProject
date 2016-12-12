@@ -1,16 +1,13 @@
-package gridWorld;
+package RL.gridWorld;
 
-import javafx.scene.paint.Color;
+import RL.Action;
+import RL.State;
 
 /**
  * Created by max on 19/10/2016.
  */
-public class EmptyGridState extends GridWorldState {
+public class EmptyGridState {
 
-    public EmptyGridState(int locX, int locY) {
-        super(locX, locY);
-        setStateColor(Color.CHOCOLATE);
-    }
 
     public void addAction(Action act) {
         return;

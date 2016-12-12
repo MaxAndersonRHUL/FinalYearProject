@@ -1,5 +1,7 @@
-package gridWorld;
+package RL.gridWorld;
 
+import RL.Action;
+import RL.QLearningController;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Pos;
@@ -71,21 +73,7 @@ public class GridWorldCreator {
         canvas.setOnMouseClicked(new canvasClickedHandler());
     }
 
-    private boolean canStateTransitionTo(GridWorldState state1, GridWorldState state2) {
-        if(state1.x == state2.x - 1 && state1.y == state2.y) {
-            return true;
-        }
-        if(state1.x == state2.x + 1 && state1.y == state2.y) {
-            return true;
-        }
-        if(state1.x == state2.x && state1.y == state2.y - 1) {
-            return true;
-        }
-        if(state1.x == state2.x && state1.y == state2.y + 1) {
-            return true;
-        }
-        return false;
-    }
+
 
     private void deselectCurrent() {
         currentlySelected.setStateColor(defColor);
@@ -100,12 +88,13 @@ public class GridWorldCreator {
     public void handleCanvasClicked(MouseEvent event) {
         double x = event.getX();
         double y = event.getY();
-        GridWorldState selected = GridWorldModel.getInstance().getGridWorldStates()[(int) (y / gridView.getGridCellSize())] [(int) (x / gridView.getGridCellSize())];
+        //GridWorldState selected = GridWorldModel.getInstance().getStates()[(int) (y / gridView.getGridCellSize())] [(int) (x / gridView.getGridCellSize())];
+        GridWorldState selected = (GridWorldState) GridWorldModel.getInstance().getStates().get(new GridWorldCoordinate((int) (y / gridView.getGridCellSize()) , (int) (x / gridView.getGridCellSize())));
         if(currentlySelected == selected) {
             deselectCurrent();
         } else if (currentlySelected == null) {
             setCurrentlySelected(selected);
-        } else if (canStateTransitionTo(currentlySelected, selected)) {
+        } else if (GridWorldModel.getInstance().canStateTransitionTo(currentlySelected, selected)) {
             boolean found = false;
             for (Action act : currentlySelected.getActions()) {
                 if (act.resultingState == selected) {
@@ -134,7 +123,7 @@ class canvasClickedHandler implements EventHandler<MouseEvent> {
 class startCreateButtonHandler implements EventHandler<ActionEvent> {
     //When the start button is clicked on the main menu.
     public void handle(ActionEvent event) {
-        GridWorldQLearning.getInstance().setIterationSpeed(1);
+        QLearningController.getInstance().setIterationSpeed(1);
         GridWorldView.getInstance().start(GridWorldLauncher.primaryStage);
 
     }

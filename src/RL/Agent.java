@@ -1,4 +1,4 @@
-package gridWorld;
+package RL;
 
 import java.util.LinkedList;
 
@@ -7,8 +7,8 @@ import java.util.LinkedList;
  */
 public class Agent {
 
-    GridWorldState currentState;
-    LinkedList<Action> actionsTaken;
+    public State currentState;
+    protected LinkedList<Action> actionsTaken;
 
     private final int MAX_ACTIONS_HISTORY = 100;
 

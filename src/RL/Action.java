@@ -1,14 +1,14 @@
-package gridWorld;
+package RL;
 
 /**
  * Created by max on 16/10/2016.
  */
 public class Action {
 
-    GridWorldState resultingState;
-    double value;
+    public State resultingState;
+    protected double value = 0;
 
-    public Action(GridWorldState resultState) {
+    public Action(State resultState) {
         resultingState = resultState;
     }
 

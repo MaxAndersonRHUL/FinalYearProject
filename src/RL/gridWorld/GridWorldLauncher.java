@@ -1,12 +1,19 @@
-package gridWorld;
+package RL.gridWorld;
 
+import RL.CurrentSimulationReference;
+import RL.QLearningController;
+import RL.XOWorld.XOModel;
+import RL.XOWorld.XOView;
 import javafx.application.Application;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.Tab;
+import javafx.scene.control.TabPane;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -32,11 +39,7 @@ public class GridWorldLauncher extends Application {
         launch(args);
     }
 
-    @Override
-    public void start(Stage primaryStage) throws Exception {
-
-        this.primaryStage = primaryStage;
-
+    public Node setupGridWorldTab() {
         VBox root = new VBox(10);
         Text titleText = new Text("Grid World");
         titleText.setFont(new Font(18));
@@ -79,7 +82,7 @@ public class GridWorldLauncher extends Application {
         creatorButton.setOnAction(new creatorButtonHandler());
 
         Button startButton = new Button("Start");
-        startButton.setOnAction(new startButtonHandler());
+        startButton.setOnAction(new startGridWorldQLearningButtonHandler());
 
         gridSizeX.getChildren().addAll(gridSizeXText, gridSizeXField);
         gridSizeY.getChildren().addAll(gridSizeYText, gridSizeYField);
@@ -101,8 +104,43 @@ public class GridWorldLauncher extends Application {
         learningIterationSpeed.setAlignment(Pos.TOP_CENTER);
         endButtons.setAlignment(Pos.TOP_CENTER);
 
+        return root;
+    }
+
+    public Node setupXOWorldTab() {
+        VBox root = new VBox(10);
+
+        Button startButton = new Button("Start");
+        startButton.setOnAction(new startXOGridWorldNoLearning());
+
+        root.getChildren().addAll(startButton);
+
+        root.setAlignment(Pos.TOP_CENTER);
+
+        return root;
+    }
+
+    @Override
+    public void start(Stage primaryStage) throws Exception {
+
+        this.primaryStage = primaryStage;
+
+        TabPane tabPane = new TabPane();
+
+        Tab gridWorldTab = new Tab();
+        gridWorldTab.setText("Grid World");
+        gridWorldTab.setContent(setupGridWorldTab());
+        gridWorldTab.closableProperty().setValue(false);
+
+        Tab XOTab = new Tab();
+        XOTab.setText("XO World");
+        XOTab.setContent(setupXOWorldTab());
+        XOTab.closableProperty().setValue(false);
+
+        tabPane.getTabs().addAll(gridWorldTab, XOTab);
+
         primaryStage.setTitle("Grid World - Final Year Project");
-        primaryStage.setScene(new Scene(root));
+        primaryStage.setScene(new Scene(tabPane));
         primaryStage.show();
     }
 
@@ -128,15 +166,39 @@ class creatorButtonHandler implements EventHandler<ActionEvent> {
     }
 }
 
-class startButtonHandler implements EventHandler<ActionEvent> {
+class startXOGridWorldNoLearning implements EventHandler<ActionEvent> {
+    //When the start button is clicked on the main menu.
+    public void handle(ActionEvent event) {
+
+        CurrentSimulationReference.model = XOModel.getInstance();
+        CurrentSimulationReference.view = XOView.getInstance();
+
+        XOModel.getInstance().setupInitialState();
+
+        XOView.getInstance().start(GridWorldLauncher.primaryStage);
+
+        CurrentSimulationReference.controller = QLearningController.getInstance();
+        QLearningController.getInstance().setIterationSpeed(1);
+        QLearningController.getInstance().startSimulation();
+
+    }
+}
+
+class startGridWorldQLearningButtonHandler implements EventHandler<ActionEvent> {
     //When the start button is clicked on the main menu.
     public void handle(ActionEvent event) {
 
         GridWorldLauncher.setupGridViewFromVariables();
 
-        GridWorldQLearning.getInstance().setIterationSpeed(Integer.parseInt(GridWorldLauncher.learningIterationSpeedField.getCharacters().toString()));
+        CurrentSimulationReference.model = GridWorldModel.getInstance();
         GridWorldModel.getInstance().setupFullGrid();
+
+        CurrentSimulationReference.view = GridWorldView.getInstance();
         GridWorldView.getInstance().start(GridWorldLauncher.primaryStage);
+
+        CurrentSimulationReference.controller = QLearningController.getInstance();
+        QLearningController.getInstance().setIterationSpeed(Integer.parseInt(GridWorldLauncher.learningIterationSpeedField.getCharacters().toString()));
+        QLearningController.getInstance().startSimulation();
 
     }
 }

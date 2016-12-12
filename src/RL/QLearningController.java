@@ -1,27 +1,20 @@
-package gridWorld;
+package RL;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentLinkedDeque;
 
 /**
  * Created by max on 18/10/2016.
  */
-public class GridWorldQLearning {
+public class QLearningController extends Controller{
 
-    GridWorldModel model;
-    static GridWorldQLearning instance;
+    Model model;
+    static QLearningController instance;
 
-    private long timeSaveTemp;
-    private int targetFPS = 8;
-    private long evoRate = 1000000000 / targetFPS;
     private double decayValue = 0.85;
     private double explorationValue = 2;
 
-    private ConcurrentLinkedDeque<Integer> forAverageIterationRate = new ConcurrentLinkedDeque<Integer>();
-
-    private GridWorldQLearning() {
-        model = GridWorldModel.getInstance();
-        runTestThread();
+    private QLearningController() {
+        model = CurrentSimulationReference.model;
     }
 
     public void setExploValue(double value) {
@@ -32,67 +25,11 @@ public class GridWorldQLearning {
         explorationValue = value;
     }
 
-    public static GridWorldQLearning getInstance() {
+    public static QLearningController getInstance() {
         if (instance == null) {
-            instance = new GridWorldQLearning();
+            instance = new QLearningController();
         }
         return instance;
-    }
-
-    public void setIterationSpeed(int iterationsPerSecond) {
-        targetFPS = iterationsPerSecond;
-        evoRate = 1000000000 / targetFPS;
-
-        forAverageIterationRate.clear();
-    }
-
-    private int calculateAverage(ConcurrentLinkedDeque<Integer> valList) {
-        double sum = 0;
-        if (!valList.isEmpty()) {
-            for (Integer mark : valList) {
-                sum += mark;
-            }
-            // Round up
-            return (int) ((sum / valList.size()) + 0.5 ) ;
-        }
-        return 0;
-    }
-
-    private void addValueToRateList(int val) {
-        if (forAverageIterationRate.size() > evoRate) {
-            forAverageIterationRate.removeFirst();
-        }
-        forAverageIterationRate.addLast(val);
-    }
-
-    public int getAverageIterationRate() {
-        return calculateAverage(forAverageIterationRate);
-    }
-
-    private void runTestThread() {
-        new Thread() {
-            public void run() {
-                while (true) {
-                    long now = System.nanoTime();
-                    long updateLength = now - timeSaveTemp;
-                    addValueToRateList((int) (1 / ((now - timeSaveTemp) / 1000000000.0)));
-                    timeSaveTemp = now;
-
-                    long sleepTime = (timeSaveTemp - System.nanoTime() + evoRate) / 1000000;
-                    if (sleepTime > 0) {
-                        try {
-                            Thread.sleep(sleepTime);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                    makeActionChoice();
-                    //model.moveAgentRandom();
-                    updateQValues();
-
-                }
-            }
-        }.start();
     }
 
     // Code for fast integer powers from: http://stackoverflow.com/questions/8071363/calculating-powers-in-java
@@ -163,14 +100,11 @@ public class GridWorldQLearning {
         double cumulative = 0;
         for (Map.Entry<Double, Action> entry : kPowerActionValues.entrySet()) {
             cumulative = cumulative + (entry.getKey()*1000.0);
-            System.out.println("DUB: " + entry.getKey() + " CUMULA: " + cumulative + " RAN: " + ran + " CURRENT STATE: " + model.getAgent().currentState + " ACTION: " + entry.getValue());
             if(ran < cumulative) {
                 model.getAgent().doAction(entry.getValue());
-                System.out.println("Breaking");
                 break;
             }
         }
-        System.out.println("############# END ##############");
     }
 
     private void updateQValues() {
@@ -186,13 +120,10 @@ public class GridWorldQLearning {
         }
     }
 
-    private void removeRandomAction() {
-        Random rng = new Random();
-        int numY = rng.nextInt(model.getGridWorldStates().length);
-        int numX = rng.nextInt(model.getGridWorldStates()[0].length);
-        ArrayList<Action> acts = model.getGridWorldStates()[numY][numX].getActions();
-        if (acts.size() > 0) {
-            acts.remove(rng.nextInt(acts.size()));
-        }
+    @Override
+    public void stepSimulation() {
+        makeActionChoice();
+        //model.moveAgentRandom();
+        updateQValues();
     }
 }

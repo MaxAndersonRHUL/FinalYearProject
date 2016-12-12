@@ -1,5 +1,6 @@
-package gridWorld;
+package RL.gridWorld;
 
+import RL.*;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
@@ -20,13 +21,11 @@ import javafx.stage.Stage;
 
 import java.awt.geom.AffineTransform;
 import java.text.DecimalFormat;
+import java.util.HashMap;
 
-public class GridWorldView {
+public class GridWorldView extends View{
 
     Stage primaryStage;
-    Canvas canvas;
-    Text fpsText;
-    Text simRateText;
 
     TextField setSimRateField;
 
@@ -50,8 +49,9 @@ public class GridWorldView {
     Color leftTransitionColor = Color.GREEN;
     Color rightTransitionColor = Color.GRAY;
 
+    @Override
     public void start(Stage primaryStage) {
-        //Parent root = FXMLLoader.load(getClass().getResource("gridWorld.fxml"));
+        //Parent root = FXMLLoader.load(getClass().getResource("RL.gridWorld.fxml"));
 
         instance = this;
 
@@ -86,7 +86,7 @@ public class GridWorldView {
             public void changed(ObservableValue<? extends Number> source, Number oldValue, Number newValue) {
                 double finalValue = Math.round( slider.getValue() * 100.0 ) / 100.0;
                 sliderLabel.setText(String.format("%1$,.2f", finalValue));
-                GridWorldQLearning.getInstance().setExploValue(finalValue);
+                QLearningController.getInstance().setExploValue(finalValue);
             } });
 
         this.primaryStage = primaryStage;
@@ -117,19 +117,13 @@ public class GridWorldView {
         primaryStage.setScene(new Scene(root));
         primaryStage.show();
 
-        WorldViewUpdater updater = new WorldViewUpdater();
-        updater.start();
+        super.start(primaryStage);
 
     }
 
     private void clearLastAgentPosition() {
         graphicsCont.setFill(Color.WHITE);
         graphicsCont.fillRect(lastDrawnAgentPosX * gridCellSize + (gridCellSize * 0.25), lastDrawnAgentPosY * gridCellSize + (gridCellSize * 0.25), gridCellSize / 2, gridCellSize / 2);
-    }
-
-    private void clearCanvas(GraphicsContext graphics, Canvas canvas) {
-        graphics.setFill(Color.WHITE);
-        graphics.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
     }
 
     public void drawAgent() {
@@ -141,11 +135,11 @@ public class GridWorldView {
     }
 
     public void drawAgent(Agent agent, GraphicsContext gc) {
-        GridWorldState state = agent.currentState;
+        GridWorldState state = (GridWorldState) agent.currentState;
         gc.setFill(Color.BLACK);
-        gc.fillRect(state.x * gridCellSize + (gridCellSize * 0.25), state.y * gridCellSize + (gridCellSize * 0.25), gridCellSize / 2, gridCellSize / 2);
-        lastDrawnAgentPosX = state.x;
-        lastDrawnAgentPosY = state.y;
+        gc.fillRect(state.getStateIdentity().x * gridCellSize + (gridCellSize * 0.25), state.getStateIdentity().y * gridCellSize + (gridCellSize * 0.25), gridCellSize / 2, gridCellSize / 2);
+        lastDrawnAgentPosX = state.getStateIdentity().x;
+        lastDrawnAgentPosY = state.getStateIdentity().y;
     }
 
     public int getGridCellSize() {
@@ -169,15 +163,6 @@ public class GridWorldView {
             instance = new GridWorldView();
         }
         return instance;
-    }
-
-    // The rate that the view is updating, or how frequently the WorldViewUpdater's 'handle' function is called.
-    public void setFpsText(int currentFPS) {
-        fpsText.setText("FPS: " + currentFPS);
-    }
-
-    public void setSimRateText(int simRate) {
-        simRateText.setText("Average simulation rate per second: " + simRate);
     }
 
     // Draws an arrow pointing east to the graphics context, rotate by an angle and filled with a color.
@@ -233,7 +218,7 @@ public class GridWorldView {
         clearCanvas(canvas.getGraphicsContext2D(), canvas);
         drawGridStates(canvas.getGraphicsContext2D());
         drawAllStateTransitions(true, canvas.getGraphicsContext2D());
-        //drawAgent(GridWorldModel.getInstance().getAgent(), canvas.getGraphicsContext2D());
+        drawAgent();
     }
 
     public void redraw() {
@@ -241,11 +226,9 @@ public class GridWorldView {
     }
 
     private void drawAllStateTransitions(boolean drawArrows, GraphicsContext graphics) {
-        for (GridWorldState[] stateArray : GridWorldModel.getInstance().getGridWorldStates()) {
-            for (GridWorldState state : stateArray) {
-                drawStateTransition(state, drawArrows, graphics);
+            for (State state : GridWorldModel.getInstance().getStates().values()) {
+                drawStateTransition((GridWorldState) state, drawArrows, graphics);
             }
-        }
     }
 
     private void drawActionValueText(int x, int y, Action act, Color color, GraphicsContext gc) {
@@ -312,45 +295,45 @@ public class GridWorldView {
 
     private void drawStateTransition(GridWorldState state, boolean drawArrows, GraphicsContext gc) {
         GridWorldModel model = GridWorldModel.getInstance();
-        GridWorldState[][] states = model.getGridWorldStates();
-        if (state.x > 0) {
-            Action foundAction = model.getStateTransitionTo(state, states[state.y][state.x - 1]);
+        HashMap<StateIdentity, State> states = model.getStates();
+        if (state.getStateIdentity().x > 0) {
+            Action foundAction = model.getStateTransitionTo(state, states.get(new GridWorldCoordinate(state.getStateIdentity().x - 1, state.getStateIdentity().y)));
             if (foundAction != null) {
                 //Draw arrow pointing WEST
                 if (drawArrows) {
-                    drawLeftTransition(state.x, state.y, gc);
+                    drawLeftTransition(state.getStateIdentity().x, state.getStateIdentity().y, gc);
                 }
-                drawLeftTransitionValue(state.x, state.y, foundAction, leftTransitionColor, gc);
+                drawLeftTransitionValue(state.getStateIdentity().x, state.getStateIdentity().y, foundAction, leftTransitionColor, gc);
             }
         }
-        if (state.x < model.getGridSizeX() - 1) {
-            Action foundAction = model.getStateTransitionTo(state, states[state.y][state.x + 1]);
+        if (state.getStateIdentity().x < model.getGridSizeX() - 1) {
+            Action foundAction = model.getStateTransitionTo(state, states.get(new GridWorldCoordinate(state.getStateIdentity().x + 1, state.getStateIdentity().y)));
             if (foundAction != null) {
                 //Draw arrow pointing EAST
                 if (drawArrows) {
-                    drawRightTransition(state.x, state.y, gc);
+                    drawRightTransition(state.getStateIdentity().x, state.getStateIdentity().y, gc);
                 }
-                drawRightTransitionValue(state.x, state.y, foundAction, rightTransitionColor, gc);
+                drawRightTransitionValue(state.getStateIdentity().x, state.getStateIdentity().y, foundAction, rightTransitionColor, gc);
             }
         }
-        if (state.y < model.getGridSizeY() - 1) {
-            Action foundAction = model.getStateTransitionTo(state, states[state.y + 1][state.x]);
+        if (state.getStateIdentity().y < model.getGridSizeY() - 1) {
+            Action foundAction = model.getStateTransitionTo(state, states.get(new GridWorldCoordinate(state.getStateIdentity().x, state.getStateIdentity().y + 1)));
             if (foundAction != null) {
                 //Draw arrow pointing SOUTH
                 if (drawArrows) {
-                    drawDownTransition(state.x, state.y, gc);
+                    drawDownTransition(state.getStateIdentity().x, state.getStateIdentity().y, gc);
                 }
-                drawDownTransitionValue(state.x, state.y, foundAction, dowNTransitionColor, gc);
+                drawDownTransitionValue(state.getStateIdentity().x, state.getStateIdentity().y, foundAction, dowNTransitionColor, gc);
             }
         }
-        if (state.y > 0) {
-            Action foundAction = model.getStateTransitionTo(state, states[state.y - 1][state.x]);
+        if (state.getStateIdentity().y > 0) {
+            Action foundAction = model.getStateTransitionTo(state, states.get(new GridWorldCoordinate(state.getStateIdentity().x, state.getStateIdentity().y - 1)));
             if (foundAction != null) {
                 //Draw arrow pointing NORTH
                 if (drawArrows) {
-                    drawUpTransition(state.x, state.y, gc);
+                    drawUpTransition(state.getStateIdentity().x, state.getStateIdentity().y, gc);
                 }
-                drawUpTransitionValue(state.x, state.y, foundAction, upTransitionColor, gc);
+                drawUpTransitionValue(state.getStateIdentity().x, state.getStateIdentity().y, foundAction, upTransitionColor, gc);
             }
         }
     }
@@ -364,10 +347,10 @@ public class GridWorldView {
 
     private void drawState(GridWorldState state, GraphicsContext gc) {
         Color col = state.getStateColor();
-        gc.strokeRect((state.x) * gridCellSize, (state.y) * gridCellSize, gridCellSize, gridCellSize);
+        gc.strokeRect((state.getStateIdentity().x) * gridCellSize, (state.getStateIdentity().y) * gridCellSize, gridCellSize, gridCellSize);
         if (col != null) {
             gc.setFill(state.getStateColor());
-            gc.fillRect((state.x) * gridCellSize + 2, (state.y) * gridCellSize + 2, gridCellSize - 4, gridCellSize - 4);
+            gc.fillRect((state.getStateIdentity().x) * gridCellSize + 2, (state.getStateIdentity().y) * gridCellSize + 2, gridCellSize - 4, gridCellSize - 4);
         }
 
         double reward = state.getReward();
@@ -375,21 +358,19 @@ public class GridWorldView {
             gc.setFont(new Font(rewardTextSize));
             gc.setFill(Color.RED);
             String formatedDouble = decimal2.format(reward);
-            gc.fillText(formatedDouble, state.x * gridCellSize + (gridCellSize / 2) - (rewardTextSize + formatedDouble.length()), state.y * gridCellSize + (gridCellSize / 2), gridCellSize);
+            gc.fillText(formatedDouble, state.getStateIdentity().x * gridCellSize + (gridCellSize / 2) - (rewardTextSize + formatedDouble.length()), state.getStateIdentity().y * gridCellSize + (gridCellSize / 2), gridCellSize);
         }
     }
 
     private void drawGridStates(GraphicsContext gc) {
-        for (GridWorldState[] stateArray : GridWorldModel.getInstance().getGridWorldStates()) {
-            for (GridWorldState state : stateArray) {
-                drawState(state, gc);
+            for (State state : GridWorldModel.getInstance().getStates().values()) {
+                drawState((GridWorldState) state, gc);
             }
-        }
     }
 }
 
 class editSimRate implements EventHandler<ActionEvent> {
     public void handle(ActionEvent event) {
-        GridWorldQLearning.getInstance().setIterationSpeed(Integer.parseInt(GridWorldView.getInstance().setSimRateField.getCharacters().toString()));
+        QLearningController.getInstance().setIterationSpeed(Integer.parseInt(GridWorldView.getInstance().setSimRateField.getCharacters().toString()));
     }
 }
