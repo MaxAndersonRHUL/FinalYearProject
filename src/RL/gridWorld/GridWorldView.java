@@ -71,7 +71,7 @@ public class GridWorldView extends View{
         Text sliderLabel = new Text();
         sliderLabel.prefWidth(200);
 
-        Slider slider = new Slider(0.9,1.1,0.99);
+        Slider slider = new Slider(0.5,1.6,0.99);
         slider.setShowTickLabels(true);
         slider.setShowTickMarks(true);
         slider.setMajorTickUnit(0.025);
@@ -96,7 +96,7 @@ public class GridWorldView extends View{
 
         editVariables.getChildren().addAll(setSimRateText, setSimRateField, setSimRateButton, slider, sliderLabel);
 
-        statusText.getChildren().addAll(fpsText, simRateText);
+        statusText.getChildren().addAll(fpsText, simRateText, showStatesViewButton);
 
         underCanvas.getChildren().addAll(editVariables, statusText);
 
@@ -116,8 +116,6 @@ public class GridWorldView extends View{
         primaryStage.setTitle("Grid World View");
         primaryStage.setScene(new Scene(root));
         primaryStage.show();
-
-        super.start(primaryStage);
 
     }
 
@@ -218,7 +216,7 @@ public class GridWorldView extends View{
         clearCanvas(canvas.getGraphicsContext2D(), canvas);
         drawGridStates(canvas.getGraphicsContext2D());
         drawAllStateTransitions(true, canvas.getGraphicsContext2D());
-        drawAgent();
+        drawAgent(canvas.getGraphicsContext2D());
     }
 
     public void redraw() {

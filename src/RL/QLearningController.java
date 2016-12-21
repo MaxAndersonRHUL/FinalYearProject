@@ -11,19 +11,11 @@ public class QLearningController extends Controller{
     static QLearningController instance;
 
     private double decayValue = 0.85;
-    private double explorationValue = 2;
 
     private QLearningController() {
         model = CurrentSimulationReference.model;
     }
 
-    public void setExploValue(double value) {
-        if(value < 0.01) {
-            explorationValue = 0.01;
-            return;
-        }
-        explorationValue = value;
-    }
 
     public static QLearningController getInstance() {
         if (instance == null) {
@@ -56,13 +48,15 @@ public class QLearningController extends Controller{
 
     private void makeActionChoice() {
         State cs = model.getAgent().currentState;
-        if (cs.getActions().size() <= 0) {
+        List<Action> activeActions = cs.getActiveActions();
+        if (activeActions.size() <= 0) {
+            System.out.println("############################### THE AGENT CAN TAKE NO ACTIONS! #######################################");
             return;
         }
 
         double max = 0;
         HashMap<Double, Action> kPowerActionValues = new HashMap<>();
-        for (Action act : cs.getActions()) {
+        for (Action act : activeActions) {
             if (act.getValue() > max) {
                 max = act.getValue();
             }
@@ -70,6 +64,7 @@ public class QLearningController extends Controller{
         }
 
         if (max == 0) {
+            System.out.println("MOVING THE AGENT RANDOMLY");
             model.moveAgentRandom();
             return;
         }
@@ -93,14 +88,17 @@ public class QLearningController extends Controller{
         }
 
         Random random = new Random();
-        System.out.println(total);
         int ran = random.nextInt((int) (total * 1000.0));
 
 
+
         double cumulative = 0;
+        //System.out.println("############ Probabilities for state: " + cs + " ##################");
         for (Map.Entry<Double, Action> entry : kPowerActionValues.entrySet()) {
+            //System.out.println("Action with value: " + entry.getValue().getValue() +", " + entry.getKey());
             cumulative = cumulative + (entry.getKey()*1000.0);
             if(ran < cumulative) {
+                System.out.println("GETTING THE AGENT TO DO ACTION THAT RESULTS IN STATE: \n" + entry.getValue().resultingState);
                 model.getAgent().doAction(entry.getValue());
                 break;
             }

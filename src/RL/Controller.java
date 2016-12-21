@@ -4,19 +4,29 @@ import java.util.concurrent.ConcurrentLinkedDeque;
 
 public abstract class Controller {
 
-    protected long timeSaveTemp;
-    protected int targetFPS = 8;
-    protected long evoRate = 1000000000 / targetFPS;
+    protected double explorationValue = 2;
+
+    private long timeSaveTemp;
+    private int targetFPS = 8;
+    private long evoRate = 1000000000 / targetFPS;
+    private long totalIterations = 0;
     private ConcurrentLinkedDeque<Integer> forAverageIterationRate = new ConcurrentLinkedDeque<Integer>();
 
     public boolean executionPaused = false;
 
     public abstract void stepSimulation();
 
+    public void setExploValue(double value) {
+        if(value < 0.01) {
+            explorationValue = 0.01;
+            return;
+        }
+        explorationValue = value;
+    }
+
     public void setIterationSpeed(int iterationsPerSecond) {
         targetFPS = iterationsPerSecond;
         evoRate = 1000000000 / targetFPS;
-
         forAverageIterationRate.clear();
     }
 
@@ -39,6 +49,10 @@ public abstract class Controller {
     public void pauseExecution() {
         executionPaused = true;
 
+    }
+
+    public long getTotalIterations() {
+        return totalIterations;
     }
 
     public void playExecution() {
@@ -70,9 +84,9 @@ public abstract class Controller {
                         }
 
                         if(!executionPaused) {
-                            CurrentSimulationReference.model.stateChanged();
+                            totalIterations++;
                             stepSimulation();
-
+                            CurrentSimulationReference.model.stateChanged();
                         }
                     }
                 }

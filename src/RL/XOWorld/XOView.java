@@ -44,18 +44,16 @@ public class XOView extends View {
         pausePlay = new Button("PAUSE");
         pausePlay.setOnAction(new pauseSimulation());
 
-        fpsText = new Text();
-        simRateText = new Text();
-
         Text setSimRateText = new Text("Set simulation rate: ");
         setSimRateField = new TextField("5");
         Button setSimRateButton = new Button("Set");
         setSimRateButton.setOnAction(new editSimRate());
 
-        editVariables.getChildren().addAll(fpsText, simRateText, pausePlay, setSimRateText, setSimRateField, setSimRateButton);
+        editVariables.getChildren().addAll(pausePlay, setSimRateText, setSimRateField, setSimRateButton);
 
-        root.getChildren().addAll(canvas, editVariables);
+        root.getChildren().addAll(canvas, editVariables, simViewPanel);
         root.setAlignment(Pos.TOP_CENTER);
+        editVariables.setAlignment(Pos.TOP_CENTER);
 
         System.out.println("RUNNING");
 
@@ -63,8 +61,6 @@ public class XOView extends View {
         primaryStage.setScene(new Scene(root));
         primaryStage.sizeToScene();
         primaryStage.show();
-
-        super.start(primaryStage);
     }
 
     public void setCanvasSize(Canvas canvas) {
@@ -87,7 +83,7 @@ public class XOView extends View {
     }
 
     public void drawBoard(XOState state) {
-        LocationState[][] board = state.getStateIdentity().board;
+        LocationState[][] board = XOModel.getInstance().getFullBoard(state.getStateIdentity()).board;
         for (int j = 0; j < board.length; j++) {
             for (int i = 0; i < board[0].length; i++) {
                 gc.strokeRect(i * gridCellSize, (j) * gridCellSize, gridCellSize, gridCellSize);
@@ -103,17 +99,13 @@ public class XOView extends View {
                     gc.setFill(new Color(0.2, 0.2, 0.2, 0.7));
                     gc.setFont(new Font(15));
                     LocationState[][] newBoard = cloneArray(board);
-                    newBoard[j][i] = LocationState.CROSS;
+                    XOModel.getInstance().removeEnemyStates(newBoard);
+                    newBoard[j][i] = XOModel.getInstance().playerMarker;
                     State transState = CurrentSimulationReference.model.getStates().get(new XOBoard(newBoard));
                     if(transState != null) {
-                        System.out.println("### CURRENT BOARD ### \n" + state.toString());
-                        System.out.println("### NEXT ACTION BOARD ## \n" + transState);
                         Action action = CurrentSimulationReference.model.getStateTransitionTo(state, transState);
                         if(action != null) {
-                            if(action.getValue() > 0) {
-                                System.out.println(action.getValue());
-                            }
-                            gc.fillText("" + action.getValue(), (i * gridCellSize) + 4 , (j * gridCellSize) + gridCellSize + 4);
+                            gc.fillText("" + action.getValue(), (i * gridCellSize) + 4 , (j * gridCellSize) + (gridCellSize * 0.8));
                         }
                     } else {
                         gc.fillText("0", (i * gridCellSize) , (j * gridCellSize) + gridCellSize);

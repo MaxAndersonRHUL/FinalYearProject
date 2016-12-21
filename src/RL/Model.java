@@ -1,7 +1,7 @@
 package RL;
 
-import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Random;
 
 /**
@@ -53,16 +53,28 @@ public class Model {
     }
 
     public Action getStateTransitionTo(State srcState, State dstState) {
-        for (Action act : srcState.getActions()) {
-            if (act.resultingState.equals(dstState)) {
-                return act;
+
+       // System.out.println("#################################");
+       // System.out.println("WE ARE TRYING TO FIND A TRANSITION FROM: \n" + srcState);
+       // System.out.println("TO STATE: \n" + dstState);
+
+        synchronized (srcState.getActions()) {
+            for (Action act : srcState.getActions()) {
+                if (act.resultingState.equals(dstState)) {
+                    // System.out.println("WE FOUND AN ACTION!");
+                    // System.out.println("#################################");
+                    return act;
+
+                }
             }
         }
+        // System.out.println("Found nothing! But we did search: " + i + " actions in the source state");
         return null;
     }
 
     public void moveAgentRandom() {
-        ArrayList<Action> actions = getAgent().currentState.getActions();
+        List<Action> actions = getAgent().currentState.getActiveActions();
+
         if (actions.size() < 1) {
             return;
         }

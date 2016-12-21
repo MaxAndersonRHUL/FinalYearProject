@@ -22,6 +22,8 @@ public class Agent {
             System.out.println("The agent attempted to move to a state it isn't able to!");
             return;
         }
+        //System.out.println("Agent is moving from state: \n" + currentState);
+        //System.out.println("To state: \n" + act.resultingState);
         currentState = act.resultingState;
         addActionToRecord(act);
     }

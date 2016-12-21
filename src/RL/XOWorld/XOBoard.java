@@ -39,9 +39,9 @@ public class XOBoard extends StateIdentity{
                 if(board[j][i] == LocationState.EMPTY) {
                     string = string + "-";
                 } else if(board[j][i] == LocationState.CROSS) {
-                    string = string + "O";
-                } else if(board[j][i] == LocationState.NAUGHT) {
                     string = string + "X";
+                } else if(board[j][i] == LocationState.NAUGHT) {
+                    string = string + "O";
                 }
             }
             string  = string + "\n";

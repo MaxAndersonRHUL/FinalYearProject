@@ -7,7 +7,7 @@ import RL.State;
  */
 public class XOState extends State {
 
-    private XOBoard identity;
+    public XOBoard identity;
 
     public XOState(XOBoard identity) {
         super();

@@ -2,25 +2,38 @@ package RL.XOWorld;
 
 import RL.*;
 
+import java.awt.*;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Random;
 
 /**
  * Created by max on 11/12/2016.
  */
 public class XOModel extends Model {
 
-    int boardSizeX = 3;
-    int boardSizeY = 3;
+    int boardSizeX = 6;
+    int boardSizeY = 6;
 
-    int amountAdjacentToWin = 3;
+    int amountAdjacentToWin = 5;
 
     int rewardForWin = 10;
+    int rewardForLoss = -10;
 
     private static XOModel instance;
+    XOState previousState;
+
+    // We use an exit flag to display the last board state, as otherwise, as soon as a win condition is met,
+    // the board is reset before being displayed on the screen. As this flag is checked and acted upon in the
+    // stateChanged method, the decrease to simulation speed is 1 iteration of the simulation.
+    private boolean exitFlag;
 
     private XOState initialState;
 
-    private LocationState playerMarker = LocationState.CROSS;
+    LocationState playerMarker = LocationState.CROSS;
+    LocationState opponentMarker = LocationState.NAUGHT;
+
+    ArrayList<Point> opponentStates;
 
     public static XOModel getInstance() {
         if(instance == null) {
@@ -29,23 +42,164 @@ public class XOModel extends Model {
         return instance;
     }
 
-    public void resetSimulation() {
+    private XOModel() {
+        opponentStates = new ArrayList<>();
+    }
+
+    private void resetSimulation() {
+        opponentStates.clear();
         mainAgent.currentState = initialState;
+        CurrentSimulationReference.view.setStatusText("Simulating...");
+        System.out.println("Rest simulation. Start state is: " + initialState);
+        previousState = null;
+    }
+
+    public XOBoard getFullBoard(XOBoard shortBread) {
+
+        XOBoard shortBoard = new XOBoard(cloneArray(shortBread.board));
+
+        for(Point location : opponentStates) {
+            /*
+            if(shortBoard.board[location.y][location.x] != LocationState.EMPTY) {
+                System.out.println("Error with getting full board! There is already a marker in an enemy position");
+                System.out.println("At location: " + location.x + ", " + location.y);
+                System.out.println("Working with shortBoard: \n" + shortBoard);
+                System.out.println("Agent's current state: \n" + mainAgent.currentState);
+                System.out.println("Opponent Positions: ");
+                for(Point point : opponentStates) {
+                    System.out.println(point);
+                }
+                for(Action act : mainAgent.currentState.getActions()) {
+                    System.out.println(act.resultingState);
+                }
+
+                return null;
+            }
+            */
+            shortBoard.board[location.y][location.x] = opponentMarker;
+        }
+        return shortBoard;
     }
 
     @Override
     public void stateChanged() {
-        buildNextPossibleStateSet((XOState) mainAgent.currentState);
-        if(checkWinCondition((XOBoard) mainAgent.currentState.getStateIdentity(), playerMarker)) {
+
+        if(exitFlag) {
             resetSimulation();
+            exitFlag = false;
+            return;
         }
+
+        if(checkWinCondition((XOBoard) mainAgent.currentState.getStateIdentity(), playerMarker)) {
+            CurrentSimulationReference.view.setStatusText(playerMarker.name() + " WINS!");
+            exitFlag = true;
+            return;
+        }
+
+        /*
+        for(Action act : mainAgent.currentState.getActions()) {
+            System.out.println("Act value: " + act.getValue());
+        }
+        */
+
+        if(previousState != null) {
+            reactivateAllActionsInState(previousState);
+        }
+
+        randomOpponentMove();
+
+
+        if(mainAgent.currentState.getActions().size() == 0) {
+            buildNextPossibleStateSet((XOState) mainAgent.currentState);
+        }
+
+        if(checkWinCondition((XOBoard) mainAgent.currentState.getStateIdentity(), opponentMarker)) {
+            CurrentSimulationReference.view.setStatusText(opponentMarker.name() + " WINS!");
+            exitFlag = true;
+            return;
+        }
+
+        deactivateActionsNotAllowed();
+
+        previousState = (XOState) mainAgent.currentState;
+
+    }
+
+    public void reactivateAllActionsInState(XOState state) {
+        for(Action act : state.getActions()) {
+            act.setActive(true);
+        }
+    }
+
+    public void deactivateActionsNotAllowed() {
+        XOBoard board = (XOBoard) (mainAgent.currentState.getStateIdentity());
+        for(Point point : opponentStates) {
+            LocationState[][] clonedBoard = cloneArray(board.board);
+            clonedBoard[point.y][point.x] = playerMarker;
+            XOBoard newBoard = new XOBoard(clonedBoard);
+
+            Action action = getStateTransitionTo(mainAgent.currentState, states.get(newBoard));
+
+            if(action != null) {
+                action.setActive(false);
+            } else {
+            }
+        }
+    }
+
+    public void randomOpponentMove() {
+        XOBoard board = getFullBoard((XOBoard) (mainAgent.currentState.getStateIdentity()));
+        LocationState[][] nboard = cloneArray(board.board);
+
+        int i = 0;
+
+        for(int y = 0; y < boardSizeY; y++) {
+            for (int x = 0; x < boardSizeX; x++) {
+                if(nboard[y][x] == LocationState.EMPTY) {
+                    i++;
+                }
+            }
+        }
+        Random rand = new Random();
+        int num = rand.nextInt(i);
+
+        i = 0;
+        for(int y = 0; y < boardSizeY; y++) {
+            for (int x = 0; x < boardSizeX; x++) {
+                if(nboard[y][x] == LocationState.EMPTY) {
+                    if(i == num) {
+                        opponentStates.add(new Point(x, y));
+                        x = 100;
+                        y = 100;
+                    }
+                    i++;
+                }
+            }
+        }
+
+        //XOBoard boardID = new XOBoard(nboard);
+
+        /*
+        if(states.containsKey(boardID)) {
+            mainAgent.currentState = states.get(new XOBoard(nboard));
+            return;
+        } else {
+            XOState state = new XOState(boardID);
+            mainAgent.currentState = state;
+            addState(state);
+        }
+        */
+        //System.out.println(mainAgent.currentState);
     }
 
     @Override
     public void addState(State state, StateIdentity identity) {
         super.addState(state, identity);
         if(checkWinCondition((XOBoard) state.getStateIdentity(), playerMarker)) {
-            state.setReward(10);
+            state.setReward(rewardForWin);
+        }
+        if(checkWinCondition((XOBoard) state.getStateIdentity(), opponentMarker)) {
+            state.setReward(rewardForLoss);
         }
     }
 
@@ -80,14 +234,26 @@ public class XOModel extends Model {
         return result;
     }
 
+    public void removeEnemyStates(LocationState[][] board) {
+        for(int y = 0; y < boardSizeY; y++) {
+            for (int x = 0; x < boardSizeX; x++) {
+                if(board[y][x] == opponentMarker) {
+                    board[y][x] = LocationState.EMPTY;
+                }
+            }
+        }
+    }
+
     public void buildNextPossibleStateSet(XOState state) {
+         //LocationState[][] board = getFullBoard(state.getStateIdentity()).board;
         LocationState[][] board = state.getStateIdentity().board;
 
         for(int y = 0; y < boardSizeY; y++) {
             for (int x = 0; x < boardSizeX; x++) {
                 if(board[y][x] == LocationState.EMPTY) {
                     LocationState[][] newBoard = cloneArray(board);
-                    newBoard[y][x] = LocationState.CROSS;
+                    removeEnemyStates(newBoard);
+                    newBoard[y][x] = playerMarker;
                     XOState newState = new XOState(new XOBoard(newBoard));
                     state.addAction(new Action(newState));
                     addState(newState);
@@ -96,11 +262,18 @@ public class XOModel extends Model {
         }
     }
 
-    public boolean checkWinCondition(XOBoard board, LocationState playerMarker) {
+    public boolean checkWinCondition(XOBoard bread, LocationState playerMarker) {
+
+        // Check for a draw condition if every position is taken
+
+        XOBoard board = getFullBoard(bread);
+
+        int totalFree = boardSizeX * boardSizeY;
+
         for(int y = 0; y < boardSizeY; y++) {
             for (int x = 0; x < boardSizeX; x++) {
                 if(board.board[y][x] == playerMarker) {
-
+                    totalFree--;
                     boolean up = true;
                     boolean down = true;
                     boolean left = true;
@@ -179,9 +352,15 @@ public class XOModel extends Model {
                     if (up || down || left || right || upleft || upright || downleft || downright) {
                         return true;
                     }
+                } else if(board.board[y][x] == opponentMarker) {
+                    totalFree--;
                 }
             }
         }
+        if(totalFree == 0) {
+            return true;
+        }
+
         return false;
     }
 }

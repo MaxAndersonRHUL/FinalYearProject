@@ -1,6 +1,7 @@
 package RL.gridWorld;
 
 import RL.Action;
+import RL.CurrentSimulationReference;
 import RL.QLearningController;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -88,8 +89,10 @@ public class GridWorldCreator {
     public void handleCanvasClicked(MouseEvent event) {
         double x = event.getX();
         double y = event.getY();
+        System.out.println("X: " + x);
+        System.out.println("Y: " + y);
         //GridWorldState selected = GridWorldModel.getInstance().getStates()[(int) (y / gridView.getGridCellSize())] [(int) (x / gridView.getGridCellSize())];
-        GridWorldState selected = (GridWorldState) GridWorldModel.getInstance().getStates().get(new GridWorldCoordinate((int) (y / gridView.getGridCellSize()) , (int) (x / gridView.getGridCellSize())));
+        GridWorldState selected = (GridWorldState) GridWorldModel.getInstance().getStates().get(new GridWorldCoordinate((int) (x / gridView.getGridCellSize()) , (int) (y / gridView.getGridCellSize())));
         if(currentlySelected == selected) {
             deselectCurrent();
         } else if (currentlySelected == null) {
@@ -104,6 +107,7 @@ public class GridWorldCreator {
                 }
             }
             if (!found) {
+                System.out.println("Adding action");
                 currentlySelected.addAction(new Action(selected));
             }
         } else {
@@ -123,8 +127,17 @@ class canvasClickedHandler implements EventHandler<MouseEvent> {
 class startCreateButtonHandler implements EventHandler<ActionEvent> {
     //When the start button is clicked on the main menu.
     public void handle(ActionEvent event) {
-        QLearningController.getInstance().setIterationSpeed(1);
-        GridWorldView.getInstance().start(GridWorldLauncher.primaryStage);
+
+        GridWorldLauncher.setupGridViewFromVariables();
+
+        CurrentSimulationReference.model = GridWorldModel.getInstance();
+
+        CurrentSimulationReference.view = GridWorldView.getInstance();
+        GridWorldView.getInstance().setupView(GridWorldLauncher.primaryStage);
+
+        CurrentSimulationReference.controller = QLearningController.getInstance();
+        QLearningController.getInstance().setIterationSpeed(Integer.parseInt(GridWorldLauncher.learningIterationSpeedField.getCharacters().toString()));
+        QLearningController.getInstance().startSimulation();
 
     }
 }

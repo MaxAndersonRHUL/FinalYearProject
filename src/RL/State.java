@@ -1,27 +1,39 @@
 package RL;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Created by max on 16/10/2016.
  */
 public abstract class State {
 
-    protected ArrayList<Action> actions;
+    protected List<Action> actions;
     public double reward = 0;
 
     public abstract StateIdentity getStateIdentity();
 
     public State() {
-        actions = new ArrayList<Action>();
+        actions = Collections.synchronizedList(new ArrayList<Action>());
     }
 
     public void addAction(Action act) {
         actions.add(act);
     }
 
-    public ArrayList<Action> getActions() {
+    public List<Action> getActions() {
         return actions;
+    }
+
+    public List<Action> getActiveActions() {
+        List<Action> activeActions = new ArrayList<>();
+        for(Action action : actions) {
+            if(action.active) {
+                activeActions.add(action);
+            }
+        }
+        return activeActions;
     }
 
     public double getReward() {

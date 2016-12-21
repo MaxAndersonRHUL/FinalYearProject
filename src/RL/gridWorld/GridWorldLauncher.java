@@ -155,7 +155,6 @@ public class GridWorldLauncher extends Application {
         view.setTextSize(Integer.parseInt(GridWorldLauncher.gridFontSizeField.getCharacters().toString()));
 
     }
-
 }
 
 class creatorButtonHandler implements EventHandler<ActionEvent> {
@@ -175,7 +174,7 @@ class startXOGridWorldNoLearning implements EventHandler<ActionEvent> {
 
         XOModel.getInstance().setupInitialState();
 
-        XOView.getInstance().start(GridWorldLauncher.primaryStage);
+        XOView.getInstance().setupView(GridWorldLauncher.primaryStage);
 
         CurrentSimulationReference.controller = QLearningController.getInstance();
         QLearningController.getInstance().setIterationSpeed(1);
@@ -194,7 +193,7 @@ class startGridWorldQLearningButtonHandler implements EventHandler<ActionEvent> 
         GridWorldModel.getInstance().setupFullGrid();
 
         CurrentSimulationReference.view = GridWorldView.getInstance();
-        GridWorldView.getInstance().start(GridWorldLauncher.primaryStage);
+        GridWorldView.getInstance().setupView(GridWorldLauncher.primaryStage);
 
         CurrentSimulationReference.controller = QLearningController.getInstance();
         QLearningController.getInstance().setIterationSpeed(Integer.parseInt(GridWorldLauncher.learningIterationSpeedField.getCharacters().toString()));

@@ -7,6 +7,7 @@ public class Action {
 
     public State resultingState;
     protected double value = 0;
+    boolean active = true;
 
     public Action(State resultState) {
         resultingState = resultState;
@@ -26,6 +27,10 @@ public class Action {
 
     public String toString() {
         return "Action[ Result State: " + resultingState + " ]";
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
     }
 
 }

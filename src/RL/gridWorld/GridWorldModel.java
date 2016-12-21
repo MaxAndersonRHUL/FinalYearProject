@@ -74,7 +74,7 @@ public class GridWorldModel extends Model {
         }
     }
 
-    private boolean canStateTransitionTo(GridWorldState state1, GridWorldState state2) {
+    protected boolean canStateTransitionTo(GridWorldState state1, GridWorldState state2) {
         if(state1.getStateIdentity().x == state2.getStateIdentity().x - 1 && state1.getStateIdentity().y == state2.getStateIdentity().y) {
             return true;
         }

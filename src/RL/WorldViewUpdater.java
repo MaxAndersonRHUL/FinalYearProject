@@ -19,6 +19,7 @@ public class WorldViewUpdater extends AnimationTimer {
             CurrentSimulationReference.view.setFpsText((int) (1 / ((now - frameBefore) / 1000000000.0)));
             int simRate = CurrentSimulationReference.controller.getAverageIterationRate();
             CurrentSimulationReference.view.setSimRateText(simRate);
+            CurrentSimulationReference.view.setTotalIterationsText(CurrentSimulationReference.controller.getTotalIterations());
         }
         frameBefore = now;
         CurrentSimulationReference.view.redraw();
