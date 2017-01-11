@@ -24,7 +24,6 @@ public class Agent {
         }
         //System.out.println("Agent is moving from state: \n" + currentState);
         //System.out.println("To state: \n" + act.resultingState);
-        currentState = act.resultingState;
         addActionToRecord(act);
     }
 

@@ -49,9 +49,11 @@ public class XOView extends View {
         Button setSimRateButton = new Button("Set");
         setSimRateButton.setOnAction(new editSimRate());
 
+        statusText = new Text();
+
         editVariables.getChildren().addAll(pausePlay, setSimRateText, setSimRateField, setSimRateButton);
 
-        root.getChildren().addAll(canvas, editVariables, simViewPanel);
+        root.getChildren().addAll(statusText, canvas, editVariables, simViewPanel);
         root.setAlignment(Pos.TOP_CENTER);
         editVariables.setAlignment(Pos.TOP_CENTER);
 
@@ -83,7 +85,7 @@ public class XOView extends View {
     }
 
     public void drawBoard(XOState state) {
-        LocationState[][] board = XOModel.getInstance().getFullBoard(state.getStateIdentity()).board;
+        LocationState[][] board = state.getStateIdentity().board;
         for (int j = 0; j < board.length; j++) {
             for (int i = 0; i < board[0].length; i++) {
                 gc.strokeRect(i * gridCellSize, (j) * gridCellSize, gridCellSize, gridCellSize);
@@ -98,17 +100,33 @@ public class XOView extends View {
                 } else if(board[j][i] == LocationState.EMPTY) {
                     gc.setFill(new Color(0.2, 0.2, 0.2, 0.7));
                     gc.setFont(new Font(15));
+
                     LocationState[][] newBoard = cloneArray(board);
-                    XOModel.getInstance().removeEnemyStates(newBoard);
                     newBoard[j][i] = XOModel.getInstance().playerMarker;
                     State transState = CurrentSimulationReference.model.getStates().get(new XOBoard(newBoard));
+
+                    if(transState == null) {
+                        for (int y = 0; y < board.length;y++) {
+                            for (int x = 0; x < board[0].length; x++) {
+                                if(newBoard[y][x] == LocationState.EMPTY) {
+                                    newBoard[y][x] = XOModel.getInstance().opponentMarker;
+                                    transState = CurrentSimulationReference.model.getStates().get(new XOBoard(newBoard));
+                                    break;
+                                }
+                            }
+                            if(transState != null) {
+                                break;
+                            }
+                        }
+                    }
+
                     if(transState != null) {
                         Action action = CurrentSimulationReference.model.getStateTransitionTo(state, transState);
                         if(action != null) {
                             gc.fillText("" + action.getValue(), (i * gridCellSize) + 4 , (j * gridCellSize) + (gridCellSize * 0.8));
                         }
                     } else {
-                        gc.fillText("0", (i * gridCellSize) , (j * gridCellSize) + gridCellSize);
+                        gc.fillText("!", (i * gridCellSize) , (j * gridCellSize) + gridCellSize);
                     }
                 }
             }

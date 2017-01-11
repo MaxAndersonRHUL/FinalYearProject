@@ -1,12 +1,15 @@
 package RL;
 
 import javafx.application.Platform;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Pos;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
+import javafx.scene.control.Slider;
 import javafx.scene.layout.HBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
@@ -53,7 +56,28 @@ public abstract class View {
         showStatesViewButton = new Button("View Model");
         showStatesViewButton.setOnAction(new showStatesView());
 
-        simViewPanel.getChildren().addAll(fpsText, simRateText, totalIterationsText, showStatesViewButton);
+        Text sliderLabel = new Text();
+        sliderLabel.prefWidth(200);
+
+        Slider slider = new Slider(0.5,1.6,0.99);
+        slider.setShowTickLabels(true);
+        slider.setShowTickMarks(true);
+        slider.setMajorTickUnit(0.025);
+        slider.setMinorTickCount(5);
+        slider.setSnapToTicks(true);
+        slider.setPrefSize(300,30);
+
+        // Code for observing and changing slider value taken and modified from: http://stackoverflow.com/questions/26552495/javafx-set-slider-value-after-dragging-mouse-button
+        // By Stackoverflow user: James_D
+        slider.valueProperty().addListener(new ChangeListener<Number>() {
+            @Override
+            public void changed(ObservableValue<? extends Number> source, Number oldValue, Number newValue) {
+                double finalValue = Math.round( slider.getValue() * 100.0 ) / 100.0;
+                sliderLabel.setText(String.format("%1$,.2f", finalValue));
+                QLearningController.getInstance().setExploValue(finalValue);
+            } });
+
+        simViewPanel.getChildren().addAll(fpsText, simRateText, totalIterationsText, showStatesViewButton, slider, sliderLabel);
 
         simViewPanel.setStyle("-fx-background-color: #808080");
         simViewPanel.setAlignment(Pos.TOP_CENTER);

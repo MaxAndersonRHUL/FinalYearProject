@@ -1,6 +1,5 @@
 package RL.gridWorld;
 
-import RL.Action;
 import RL.CurrentSimulationReference;
 import RL.QLearningController;
 import javafx.event.ActionEvent;
@@ -93,6 +92,12 @@ public class GridWorldCreator {
         System.out.println("Y: " + y);
         //GridWorldState selected = GridWorldModel.getInstance().getStates()[(int) (y / gridView.getGridCellSize())] [(int) (x / gridView.getGridCellSize())];
         GridWorldState selected = (GridWorldState) GridWorldModel.getInstance().getStates().get(new GridWorldCoordinate((int) (x / gridView.getGridCellSize()) , (int) (y / gridView.getGridCellSize())));
+
+
+        /*
+
+        UNDER CONSTRUCTION. THIS CODE NEEDS TO BE RECREATED TO DEAL WITH STOCHASTIC MDP'S.
+
         if(currentlySelected == selected) {
             deselectCurrent();
         } else if (currentlySelected == null) {
@@ -108,13 +113,15 @@ public class GridWorldCreator {
             }
             if (!found) {
                 System.out.println("Adding action");
-                currentlySelected.addAction(new Action(selected));
+                currentlySelected.addAction(new Action(selected, 0));
             }
         } else {
             deselectCurrent();
         }
         gridView.redraw(canvas);
+        */
     }
+
 }
 
 class canvasClickedHandler implements EventHandler<MouseEvent> {

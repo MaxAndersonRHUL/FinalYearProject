@@ -33,7 +33,7 @@ public class GridWorldCoordinate extends StateIdentity {
     }
 
     public String toString() {
-        return "GridWorldCoordinate[ X: " + x + ", Y: " +  y + " ]";
+        return "X: " + x + ", Y: " +  y;
     }
 
 }

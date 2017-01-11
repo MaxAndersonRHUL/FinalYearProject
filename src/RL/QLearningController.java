@@ -46,12 +46,12 @@ public class QLearningController extends Controller{
         return sum;
     }
 
-    private void makeActionChoice() {
+    protected Action makeActionChoice() {
         State cs = model.getAgent().currentState;
         List<Action> activeActions = cs.getActiveActions();
         if (activeActions.size() <= 0) {
-            System.out.println("############################### THE AGENT CAN TAKE NO ACTIONS! #######################################");
-            return;
+            //System.out.println("############################### THE AGENT CAN TAKE NO ACTIONS! #######################################");
+            return null;
         }
 
         double max = 0;
@@ -64,9 +64,8 @@ public class QLearningController extends Controller{
         }
 
         if (max == 0) {
-            System.out.println("MOVING THE AGENT RANDOMLY");
-            model.moveAgentRandom();
-            return;
+            //System.out.println("MOVING THE AGENT RANDOMLY");
+            return model.moveAgentRandom();
         }
 
         double sumValues = sumOfArray(kPowerActionValues.keySet());
@@ -98,14 +97,15 @@ public class QLearningController extends Controller{
             //System.out.println("Action with value: " + entry.getValue().getValue() +", " + entry.getKey());
             cumulative = cumulative + (entry.getKey()*1000.0);
             if(ran < cumulative) {
-                System.out.println("GETTING THE AGENT TO DO ACTION THAT RESULTS IN STATE: \n" + entry.getValue().resultingState);
-                model.getAgent().doAction(entry.getValue());
-                break;
+                //System.out.println("GETTING THE AGENT TO DO ACTION THAT RESULTS IN STATE: \n" + entry.getValue().resultingState);
+                return entry.getValue();
             }
         }
+        return null;
     }
 
-    private void updateQValues() {
+    @Override
+    protected void updateAgentLearningValues() {
         Action highestAct = model.highestValueFromState(model.getAgent().currentState);
         double highestVal = 0;
         if (highestAct != null) {
@@ -118,10 +118,12 @@ public class QLearningController extends Controller{
         }
     }
 
+    /*
     @Override
     public void stepSimulation() {
         makeActionChoice();
         //model.moveAgentRandom();
-        updateQValues();
+        updateAgentLearningValues();
     }
+    */
 }

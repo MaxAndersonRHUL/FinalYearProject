@@ -30,7 +30,7 @@ public class GridWorldState extends State {
     }
 
     public String toString() {
-        return "GridWorldState[ " + getStateIdentity().toString() + " ]";
+        return getStateIdentity().toString();
     }
 
     public Color getStateColor() {

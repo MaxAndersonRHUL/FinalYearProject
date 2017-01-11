@@ -46,7 +46,7 @@ public abstract class State {
 
     // A state asks if it can transition to this state.
     public boolean addActionToState(State state) {
-        state.addAction(new Action(this));
+        state.addAction(new Action(this, 0));
         return true;
     }
 

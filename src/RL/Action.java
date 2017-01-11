@@ -1,20 +1,45 @@
 package RL;
 
+import java.util.HashMap;
+
 /**
  * Created by max on 16/10/2016.
  */
 public class Action {
 
-    public State resultingState;
+    public HashMap<State, Probability> resultingStates = new HashMap<>();
     protected double value = 0;
     boolean active = true;
 
-    public Action(State resultState) {
-        resultingState = resultState;
+    private State highestProbabilityState = null;
+    private double highestProbability = -1;
+
+    public Action(State resultState, double probability) {
+        addResultingState(resultState, probability);
     }
 
-    public State getResultingState() {
-        return resultingState;
+    public Action() {
+
+    }
+
+    public State getMostProbableState() {
+        return highestProbabilityState;
+    }
+
+    public void addResultingState(State resultState, double probability) {
+        addResultingState(resultState, new Probability(probability));
+    }
+
+    public void addResultingState(State resultState, Probability probability) {
+        resultingStates.put(resultState, probability);
+        if(probability.probab > highestProbability) {
+            highestProbability = probability.probab;
+            highestProbabilityState = resultState;
+        }
+    }
+
+    public HashMap<State, Probability> getResultingStates() {
+        return resultingStates;
     }
 
     public double getValue() {
@@ -26,7 +51,7 @@ public class Action {
     }
 
     public String toString() {
-        return "Action[ Result State: " + resultingState + " ]";
+        return "Action[ Result State: " + resultingStates + " ]";
     }
 
     public void setActive(boolean active) {

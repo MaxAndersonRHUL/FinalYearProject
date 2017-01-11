@@ -2,6 +2,7 @@ package RL;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 /**
@@ -37,6 +38,13 @@ public class Model {
 
     }
 
+    public State decideActionChoiceResult(Action action) {
+        for(Map.Entry<State,Probability> entry : action.getResultingStates().entrySet()) {
+            return entry.getKey();
+        }
+        return null;
+    }
+
     public void removeState(State state) {
         states.remove(state);
     }
@@ -60,7 +68,7 @@ public class Model {
 
         synchronized (srcState.getActions()) {
             for (Action act : srcState.getActions()) {
-                if (act.resultingState.equals(dstState)) {
+                if (act.getResultingStates().containsKey(dstState)) {
                     // System.out.println("WE FOUND AN ACTION!");
                     // System.out.println("#################################");
                     return act;
@@ -72,16 +80,16 @@ public class Model {
         return null;
     }
 
-    public void moveAgentRandom() {
+    public Action moveAgentRandom() {
         List<Action> actions = getAgent().currentState.getActiveActions();
 
         if (actions.size() < 1) {
-            return;
+            return null;
         }
         Random rng = new Random();
         int num = rng.nextInt(actions.size());
         Action exec = actions.get(num);
-        getAgent().doAction(exec);
+        return exec;
     }
 
     // Returns null if no actions on state, or if all actions are 0.

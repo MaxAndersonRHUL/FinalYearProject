@@ -1,8 +1,6 @@
 package RL.gridWorld;
 
 import RL.*;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Pos;
@@ -10,7 +8,6 @@ import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
-import javafx.scene.control.Slider;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -61,44 +58,20 @@ public class GridWorldView extends View{
         HBox statusText = new HBox(40);
         HBox editVariables = new HBox(40);
 
-        fpsText = new Text("Yes, this is definitely text.");
-        simRateText = new Text("OK!");
         Text setSimRateText = new Text("Set simulation rate: ");
         setSimRateField = new TextField("5");
         Button setSimRateButton = new Button("Set");
         setSimRateButton.setOnAction(new editSimRate());
 
-        Text sliderLabel = new Text();
-        sliderLabel.prefWidth(200);
-
-        Slider slider = new Slider(0.5,1.6,0.99);
-        slider.setShowTickLabels(true);
-        slider.setShowTickMarks(true);
-        slider.setMajorTickUnit(0.025);
-        slider.setMinorTickCount(5);
-        slider.setSnapToTicks(true);
-        slider.setPrefSize(300,30);
-
-        // Code for observing and changing slider value taken from: http://stackoverflow.com/questions/26552495/javafx-set-slider-value-after-dragging-mouse-button
-        // By Stackoverflow user: James_D
-        slider.valueProperty().addListener(new ChangeListener<Number>() {
-            @Override
-            public void changed(ObservableValue<? extends Number> source, Number oldValue, Number newValue) {
-                double finalValue = Math.round( slider.getValue() * 100.0 ) / 100.0;
-                sliderLabel.setText(String.format("%1$,.2f", finalValue));
-                QLearningController.getInstance().setExploValue(finalValue);
-            } });
 
         this.primaryStage = primaryStage;
         canvas = new Canvas();
         setCanvasSize(canvas);
         graphicsCont = canvas.getGraphicsContext2D();
 
-        editVariables.getChildren().addAll(setSimRateText, setSimRateField, setSimRateButton, slider, sliderLabel);
+        editVariables.getChildren().addAll(setSimRateText, setSimRateField, setSimRateButton);
 
-        statusText.getChildren().addAll(fpsText, simRateText, showStatesViewButton);
-
-        underCanvas.getChildren().addAll(editVariables, statusText);
+        underCanvas.getChildren().addAll(editVariables, statusText, this.simViewPanel);
 
         root.getChildren().addAll(canvas, underCanvas);
 

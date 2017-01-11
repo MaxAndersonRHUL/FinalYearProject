@@ -12,10 +12,10 @@ import java.util.Random;
  */
 public class XOModel extends Model {
 
-    int boardSizeX = 6;
-    int boardSizeY = 6;
+    int boardSizeX = 2;
+    int boardSizeY = 2;
 
-    int amountAdjacentToWin = 5;
+    int amountAdjacentToWin = 2;
 
     int rewardForWin = 10;
     int rewardForLoss = -10;
@@ -49,11 +49,44 @@ public class XOModel extends Model {
     private void resetSimulation() {
         opponentStates.clear();
         mainAgent.currentState = initialState;
-        CurrentSimulationReference.view.setStatusText("Simulating...");
         System.out.println("Rest simulation. Start state is: " + initialState);
         previousState = null;
     }
 
+    public XOBoard copyPlayerMarkersToBoard(XOBoard fromBoard, XOBoard toBoard) {
+        LocationState[][] clonedBoard = cloneArray(toBoard.board);
+        for(int y = 0; y < boardSizeY; y++) {
+            for(int x = 0; x < boardSizeX; x++) {
+                if(fromBoard.board[y][x] == playerMarker) {
+                    clonedBoard[y][x] = playerMarker;
+                }
+            }
+        }
+        return new XOBoard(clonedBoard);
+    }
+
+    @Override
+    public State decideActionChoiceResult(Action act) {
+        // We want any state that results from an action. MostProbableState is used here as it is an easily accessible action.
+        // Since every possible state that results from this action has the location of the learning algorithms choice, we can pick
+        // any action and remove the opponent marker.
+
+        System.out.println("CurrentState in ActionChoice: \n " + mainAgent.currentState);
+        System.out.println("currentState action size: " + mainAgent.currentState.getActions().size());
+
+        if(mainAgent.currentState.getActions().size() == 1) {
+            System.out.println("Setting agent state");
+            return mainAgent.currentState.getActions().get(0).getMostProbableState();
+        }
+
+        XOBoard prevBoard = (XOBoard) mainAgent.currentState.getStateIdentity();
+        XOBoard playerMovedBoard = copyPlayerMarkersToBoard((XOBoard) act.getMostProbableState().getStateIdentity(), prevBoard);
+        XOBoard board = randomOpponentMove(playerMovedBoard);
+
+        return states.get(board);
+    }
+
+    /*
     public XOBoard getFullBoard(XOBoard shortBread) {
 
         XOBoard shortBoard = new XOBoard(cloneArray(shortBread.board));
@@ -75,23 +108,25 @@ public class XOModel extends Model {
 
                 return null;
             }
-            */
+
             shortBoard.board[location.y][location.x] = opponentMarker;
         }
         return shortBoard;
     }
+    */
 
     @Override
     public void stateChanged() {
-
+/*
         if(exitFlag) {
             resetSimulation();
             exitFlag = false;
             return;
         }
-
+*/
         if(checkWinCondition((XOBoard) mainAgent.currentState.getStateIdentity(), playerMarker)) {
             CurrentSimulationReference.view.setStatusText(playerMarker.name() + " WINS!");
+            resetSimulation();
             exitFlag = true;
             return;
         }
@@ -103,10 +138,8 @@ public class XOModel extends Model {
         */
 
         if(previousState != null) {
-            reactivateAllActionsInState(previousState);
+            //reactivateAllActionsInState(previousState);
         }
-
-        randomOpponentMove();
 
 
         if(mainAgent.currentState.getActions().size() == 0) {
@@ -115,11 +148,12 @@ public class XOModel extends Model {
 
         if(checkWinCondition((XOBoard) mainAgent.currentState.getStateIdentity(), opponentMarker)) {
             CurrentSimulationReference.view.setStatusText(opponentMarker.name() + " WINS!");
+            resetSimulation();
             exitFlag = true;
             return;
         }
 
-        deactivateActionsNotAllowed();
+        //deactivateActionsNotAllowed();
 
         previousState = (XOState) mainAgent.currentState;
 
@@ -147,9 +181,9 @@ public class XOModel extends Model {
         }
     }
 
-    public void randomOpponentMove() {
-        XOBoard board = getFullBoard((XOBoard) (mainAgent.currentState.getStateIdentity()));
-        LocationState[][] nboard = cloneArray(board.board);
+    public XOBoard randomOpponentMove(XOBoard addingBoard) {
+
+        LocationState[][] nboard = cloneArray(addingBoard.board);
 
         int i = 0;
 
@@ -168,14 +202,15 @@ public class XOModel extends Model {
             for (int x = 0; x < boardSizeX; x++) {
                 if(nboard[y][x] == LocationState.EMPTY) {
                     if(i == num) {
-                        opponentStates.add(new Point(x, y));
-                        x = 100;
-                        y = 100;
+                        nboard[y][x] = opponentMarker;
+                        return new XOBoard(nboard);
                     }
                     i++;
                 }
             }
         }
+
+        return null;
 
         //XOBoard boardID = new XOBoard(nboard);
 
@@ -248,15 +283,44 @@ public class XOModel extends Model {
          //LocationState[][] board = getFullBoard(state.getStateIdentity()).board;
         LocationState[][] board = state.getStateIdentity().board;
 
+        int placesFree = boardSizeX * boardSizeY;
+
         for(int y = 0; y < boardSizeY; y++) {
             for (int x = 0; x < boardSizeX; x++) {
                 if(board[y][x] == LocationState.EMPTY) {
-                    LocationState[][] newBoard = cloneArray(board);
-                    removeEnemyStates(newBoard);
-                    newBoard[y][x] = playerMarker;
-                    XOState newState = new XOState(new XOBoard(newBoard));
-                    state.addAction(new Action(newState));
-                    addState(newState);
+                    placesFree --;
+                    LocationState[][] playerLocBoard = cloneArray(board);
+                    playerLocBoard[y][x] = playerMarker;
+
+                    Action thisAction = new Action();
+                    state.addAction(thisAction);
+
+                    for(int y1 = 0; y1 < boardSizeY; y1++) {
+                        for (int x1 = 0; x1 < boardSizeX; x1++) {
+                            if (playerLocBoard[y1][x1] == LocationState.EMPTY) {
+                                LocationState[][] actionBoard = cloneArray(playerLocBoard);
+                                actionBoard[y1][x1] = opponentMarker;
+                                XOState newState = new XOState(new XOBoard(actionBoard));
+                                thisAction.addResultingState(newState, 0.1);
+                                addState(newState);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        if(placesFree == (boardSizeX * boardSizeY) - 1 ) {
+            for(int y = 0; y < boardSizeY; y++) {
+                for (int x = 0; x < boardSizeX; x++) {
+                    if (board[y][x] == LocationState.EMPTY) {
+                        LocationState[][] playerLocBoard = cloneArray(board);
+                        playerLocBoard[y][x] = playerMarker;
+                        // Get the state that was added by the previous series of loops.
+                        Action thisAction = state.getActions().get(0);
+                        XOState newState = new XOState(new XOBoard(playerLocBoard));
+                        addState(newState);
+                        thisAction.addResultingState(newState, 1);
+                    }
                 }
             }
         }
@@ -265,14 +329,11 @@ public class XOModel extends Model {
     public boolean checkWinCondition(XOBoard bread, LocationState playerMarker) {
 
         // Check for a draw condition if every position is taken
-
-        XOBoard board = getFullBoard(bread);
-
         int totalFree = boardSizeX * boardSizeY;
 
         for(int y = 0; y < boardSizeY; y++) {
             for (int x = 0; x < boardSizeX; x++) {
-                if(board.board[y][x] == playerMarker) {
+                if(bread.board[y][x] == playerMarker) {
                     totalFree--;
                     boolean up = true;
                     boolean down = true;
@@ -286,7 +347,7 @@ public class XOModel extends Model {
                     for(int i = 0; i < amountAdjacentToWin; i++) {
 
                         if(y+i < boardSizeY) {
-                            if(down && board.board[y+i][x] != playerMarker) {
+                            if(down && bread.board[y+i][x] != playerMarker) {
                                 down = false;
                             }
                         } else {
@@ -294,7 +355,7 @@ public class XOModel extends Model {
                         }
 
                         if(y-i >= 0) {
-                            if(up && board.board[y-i][x] != playerMarker) {
+                            if(up && bread.board[y-i][x] != playerMarker) {
                                 up = false;
                             }
                         } else {
@@ -302,7 +363,7 @@ public class XOModel extends Model {
                         }
 
                         if(x+i < boardSizeX) {
-                            if(left && board.board[y][x+i] != playerMarker) {
+                            if(left && bread.board[y][x+i] != playerMarker) {
                                 left = false;
                             }
                         } else {
@@ -310,7 +371,7 @@ public class XOModel extends Model {
                         }
 
                         if(x-i >= 0) {
-                            if(right && board.board[y][x-i] != playerMarker) {
+                            if(right && bread.board[y][x-i] != playerMarker) {
                                 right = false;
                             }
                         } else {
@@ -318,7 +379,7 @@ public class XOModel extends Model {
                         }
 
                         if(y+i < boardSizeY && x-i >= 0) {
-                            if(downleft && board.board[y+i][x-i] != playerMarker) {
+                            if(downleft && bread.board[y+i][x-i] != playerMarker) {
                                 downleft = false;
                             }
                         } else {
@@ -326,7 +387,7 @@ public class XOModel extends Model {
                         }
 
                         if(y+i < boardSizeY && x+i < boardSizeX) {
-                            if(downright && board.board[y+i][x+i] != playerMarker) {
+                            if(downright && bread.board[y+i][x+i] != playerMarker) {
                                 downright = false;
                             }
                         } else {
@@ -334,7 +395,7 @@ public class XOModel extends Model {
                         }
 
                         if(y-i >= 0 && x - i >= 0) {
-                            if(upleft && board.board[y-i][x-i] != playerMarker) {
+                            if(upleft && bread.board[y-i][x-i] != playerMarker) {
                                 upleft = false;
                             }
                         } else {
@@ -342,7 +403,7 @@ public class XOModel extends Model {
                         }
 
                         if(y-i >= 0 && x+i < boardSizeX) {
-                            if(upright && board.board[y-i][x+i] != playerMarker) {
+                            if(upright && bread.board[y-i][x+i] != playerMarker) {
                                 upright = false;
                             }
                         } else {
@@ -352,7 +413,7 @@ public class XOModel extends Model {
                     if (up || down || left || right || upleft || upright || downleft || downright) {
                         return true;
                     }
-                } else if(board.board[y][x] == opponentMarker) {
+                } else if(bread.board[y][x] == opponentMarker) {
                     totalFree--;
                 }
             }
