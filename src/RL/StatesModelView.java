@@ -16,6 +16,7 @@ import javafx.stage.Stage;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.Map;
 
 /**
  * Created by max on 20/12/2016.
@@ -25,7 +26,7 @@ public class StatesModelView {
     protected Stage statesViewStage;
     Canvas canvas;
     int stateSize = 75;
-    int stateSeperation = 80;
+    int stateSeperation = 200;
     ScrollPane scrollView;
 
     int currentViewX = 500;
@@ -121,47 +122,51 @@ public class StatesModelView {
         while(currentState != null) {
 
             int amountOfActions = currentState.getActions().size();
-            int amFactor = amountOfActions;
+            int amFactor = amountOfActions * 2;
             int i = amountOfActions/2;
 
             for (Action act : currentState.getActions()) {
 
-                if(!visistedStates.containsKey(act.getMostProbableState())) {
+                for(Map.Entry<State, Probability> entry : act.getResultingStates().entrySet()) {
 
-                    int locationX = previousX + (stateSeperation) - (amFactor * stateSeperation);
-                    int locationY = previousY + stateSeperation;
 
-                    Point2D nPoint = findNextClosestLocation(takenLocations, new Point2D(locationX, locationY));
+                    if (!visistedStates.containsKey(entry.getKey())) {
 
-                    locationX = nPoint.x;
-                    locationY = nPoint.y;
+                        int locationX = previousX + (stateSeperation) - (amFactor * stateSeperation);
+                        int locationY = previousY + stateSeperation;
 
-                    takenLocations.add(nPoint);
+                        Point2D nPoint = findNextClosestLocation(takenLocations, new Point2D(locationX, locationY));
 
-                    int screenViewLocationX = locationX - currentViewX;
-                    int screenViewLocationY = locationY - currentViewY;
-                    canvas.getGraphicsContext2D().strokeRect(screenViewLocationX, screenViewLocationY, stateSize, stateSize);
+                        locationX = nPoint.x;
+                        locationY = nPoint.y;
 
-                    canvas.getGraphicsContext2D().setFont(new Font((stateSize/6) + 3));
-                    canvas.getGraphicsContext2D().setFill(Color.BLACK);
-                    canvas.getGraphicsContext2D().fillText(act.getMostProbableState().toString(), screenViewLocationX + 2, screenViewLocationY + (stateSize/2));
+                        takenLocations.add(nPoint);
 
-                    StateViewLocation stateLocObj = new StateViewLocation(act.getMostProbableState(), locationX + (stateSize/2), previousY + stateSeperation + (stateSize/2));
-                    backlog.addLast(stateLocObj);
-                    visistedStates.put(act.getMostProbableState(), stateLocObj.location);
-                    canvas.getGraphicsContext2D().strokeLine(previousX - currentViewX, (previousY-currentViewY) + (stateSize/2), screenViewLocationX + (stateSize/2), screenViewLocationY);
+                        int screenViewLocationX = locationX - currentViewX;
+                        int screenViewLocationY = locationY - currentViewY;
+                        canvas.getGraphicsContext2D().strokeRect(screenViewLocationX, screenViewLocationY, stateSize, stateSize);
 
-                } else {
+                        canvas.getGraphicsContext2D().setFont(new Font((stateSize / 6) + 3));
+                        canvas.getGraphicsContext2D().setFill(Color.BLACK);
+                        canvas.getGraphicsContext2D().fillText(entry.getKey().toString(), screenViewLocationX + 2, screenViewLocationY + (stateSize / 2));
 
-                    int locationX = visistedStates.get(act.getMostProbableState()).x;
-                    int locationY = visistedStates.get(act.getMostProbableState()).y + (stateSize/2);
+                        StateViewLocation stateLocObj = new StateViewLocation(entry.getKey(), locationX + (stateSize / 2), previousY + stateSeperation + (stateSize / 2));
+                        backlog.addLast(stateLocObj);
+                        visistedStates.put(entry.getKey(), stateLocObj.location);
+                        canvas.getGraphicsContext2D().strokeLine(previousX - currentViewX, (previousY - currentViewY) + (stateSize / 2), screenViewLocationX + (stateSize / 2), screenViewLocationY);
 
-                    int screenViewLocationX = locationX - currentViewX;
-                    int screenViewLocationY = locationY - currentViewY;
+                    } else {
 
-                    canvas.getGraphicsContext2D().fillRect(screenViewLocationX, screenViewLocationY, stateSize/10, stateSize/10);
+                        int locationX = visistedStates.get(entry.getKey()).x;
+                        int locationY = visistedStates.get(entry.getKey()).y + (stateSize / 2);
 
-                    canvas.getGraphicsContext2D().strokeLine(previousX - currentViewX, (previousY-currentViewY) + (stateSize/2), screenViewLocationX, screenViewLocationY);
+                        int screenViewLocationX = locationX - currentViewX;
+                        int screenViewLocationY = locationY - currentViewY;
+
+                        canvas.getGraphicsContext2D().fillRect(screenViewLocationX, screenViewLocationY, stateSize / 10, stateSize / 10);
+
+                        canvas.getGraphicsContext2D().strokeLine(previousX - currentViewX, (previousY - currentViewY) + (stateSize / 2), screenViewLocationX, screenViewLocationY);
+                    }
                 }
                 i--;
                 amFactor = (i*2);

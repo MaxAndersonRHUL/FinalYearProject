@@ -12,13 +12,13 @@ import java.util.Random;
  */
 public class XOModel extends Model {
 
-    int boardSizeX = 2;
-    int boardSizeY = 2;
+    int boardSizeX = 3;
+    int boardSizeY = 3;
 
-    int amountAdjacentToWin = 2;
+    int amountAdjacentToWin = 3;
 
     int rewardForWin = 10;
-    int rewardForLoss = -10;
+    int rewardForLoss = 0;
 
     private static XOModel instance;
     XOState previousState;
@@ -49,7 +49,6 @@ public class XOModel extends Model {
     private void resetSimulation() {
         opponentStates.clear();
         mainAgent.currentState = initialState;
-        System.out.println("Rest simulation. Start state is: " + initialState);
         previousState = null;
     }
 
@@ -71,11 +70,7 @@ public class XOModel extends Model {
         // Since every possible state that results from this action has the location of the learning algorithms choice, we can pick
         // any action and remove the opponent marker.
 
-        System.out.println("CurrentState in ActionChoice: \n " + mainAgent.currentState);
-        System.out.println("currentState action size: " + mainAgent.currentState.getActions().size());
-
         if(mainAgent.currentState.getActions().size() == 1) {
-            System.out.println("Setting agent state");
             return mainAgent.currentState.getActions().get(0).getMostProbableState();
         }
 
@@ -124,6 +119,17 @@ public class XOModel extends Model {
             return;
         }
 */
+        /*
+        System.out.println("PRINTING ALL STATES ####################");
+        for(State state : states.values()) {
+            System.out.println(state);
+            for(Action action : state.getActions()) {
+                System.out.println("ACTION Q VALUE: " + action.getValue());
+            }
+        }
+        System.out.println("END #################### \n \n \n");
+        */
+
         if(checkWinCondition((XOBoard) mainAgent.currentState.getStateIdentity(), playerMarker)) {
             CurrentSimulationReference.view.setStatusText(playerMarker.name() + " WINS!");
             resetSimulation();
