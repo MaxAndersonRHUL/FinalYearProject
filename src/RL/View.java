@@ -84,7 +84,7 @@ public abstract class View {
 
         start(stage);
 
-        WorldViewUpdater updater = new WorldViewUpdater();
+        WorldViewUpdater updater = new WorldViewUpdater(this, CurrentSimulationReference.controller);
         updater.start();
 
     }

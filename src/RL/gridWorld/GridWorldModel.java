@@ -1,9 +1,6 @@
 package RL.gridWorld;
 
-import RL.Agent;
-import RL.Model;
-import RL.State;
-import RL.StateIdentity;
+import RL.*;
 
 import java.util.HashMap;
 
@@ -33,6 +30,10 @@ public class GridWorldModel extends Model {
         fillActions();
     }
 
+    @Override
+    public State decideActionChoiceResult(Action action) {
+        return action.getMostProbableState();
+    }
 
     void printAllHashCodes() {
         for(StateIdentity state : states.keySet()) {

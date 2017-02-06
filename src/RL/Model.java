@@ -84,6 +84,7 @@ public class Model {
         List<Action> actions = getAgent().currentState.getActiveActions();
 
         if (actions.size() < 1) {
+            System.out.println("Agent has no actions to pick randomly!");
             return null;
         }
         Random rng = new Random();

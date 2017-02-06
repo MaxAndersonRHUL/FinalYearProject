@@ -1,5 +1,6 @@
 package RL.gridWorld;
 
+import RL.Action;
 import RL.CurrentSimulationReference;
 import RL.QLearningController;
 import javafx.event.ActionEvent;
@@ -9,6 +10,8 @@ import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
@@ -26,6 +29,8 @@ public class GridWorldCreator {
     private Canvas canvas;
 
     private GridWorldState currentlySelected = null;
+
+    String currentlyTyping = "";
 
     Color selectedColor = new Color(0,0,1,0.4);
     Color defColor = new Color(1,1,1,0);
@@ -52,13 +57,22 @@ public class GridWorldCreator {
         Button startButton = new Button("Start Simulation");
         startButton.setOnAction(new startCreateButtonHandler());
 
+        Button fillGridButton = new Button("Create Every Transition");
+        fillGridButton.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                GridWorldModel.getInstance().setupFullGrid();
+                gridView.redraw(canvas);
+            }
+        });
+
         canvas = new Canvas();
 
         gridView.setCanvasSize(canvas);
 
         graphics = canvas.getGraphicsContext2D();
 
-        underCanvas.getChildren().addAll(startButton);
+        underCanvas.getChildren().addAll(startButton, fillGridButton);
         root.getChildren().addAll(canvas, underCanvas);
 
         underCanvas.setAlignment(Pos.TOP_CENTER);
@@ -66,18 +80,51 @@ public class GridWorldCreator {
 
         gridView.redraw(canvas);
 
+        Scene scene = new Scene(root);
+
         primaryStage.setTitle("Grid World Creator");
-        primaryStage.setScene(new Scene(root));
+        primaryStage.setScene(scene);
         primaryStage.show();
+
+
+        scene.setOnKeyPressed(new EventHandler<KeyEvent>() {
+            @Override
+            public void handle(KeyEvent event) {
+                keyPressed(event.getCode());
+            }
+        });
 
         canvas.setOnMouseClicked(new canvasClickedHandler());
     }
 
-
+    private void keyPressed(KeyCode key) {
+        if(currentlySelected != null) {
+            gridView.redraw(canvas);
+            if(key.isDigitKey()) {
+                currentlyTyping = currentlyTyping + key.getName();
+                gridView.drawTextInState(currentlySelected, graphics, currentlyTyping);
+            }
+            if(key == KeyCode.BACK_SPACE) {
+                if (currentlyTyping != null && currentlyTyping.length() > 0) {
+                    currentlyTyping = currentlyTyping.substring(0, currentlyTyping.length()-1);
+                    gridView.drawTextInState(currentlySelected, graphics, currentlyTyping);
+                }
+            }
+            if(key == KeyCode.ENTER) {
+                if(currentlyTyping != null) {
+                    double dub = Double.parseDouble(currentlyTyping);
+                    currentlySelected.setReward(dub);
+                    currentlyTyping = null;
+                    gridView.redraw(canvas);
+                }
+            }
+        }
+    }
 
     private void deselectCurrent() {
         currentlySelected.setStateColor(defColor);
         currentlySelected = null;
+        currentlyTyping = null;
     }
 
     private void setCurrentlySelected(GridWorldState state) {
@@ -94,10 +141,6 @@ public class GridWorldCreator {
         GridWorldState selected = (GridWorldState) GridWorldModel.getInstance().getStates().get(new GridWorldCoordinate((int) (x / gridView.getGridCellSize()) , (int) (y / gridView.getGridCellSize())));
 
 
-        /*
-
-        UNDER CONSTRUCTION. THIS CODE NEEDS TO BE RECREATED TO DEAL WITH STOCHASTIC MDP'S.
-
         if(currentlySelected == selected) {
             deselectCurrent();
         } else if (currentlySelected == null) {
@@ -105,7 +148,7 @@ public class GridWorldCreator {
         } else if (GridWorldModel.getInstance().canStateTransitionTo(currentlySelected, selected)) {
             boolean found = false;
             for (Action act : currentlySelected.getActions()) {
-                if (act.resultingState == selected) {
+                if (act.getMostProbableState() == selected) {
                     found = true;
                     currentlySelected.removeAction(act);
                     break;
@@ -119,7 +162,6 @@ public class GridWorldCreator {
             deselectCurrent();
         }
         gridView.redraw(canvas);
-        */
     }
 
 }

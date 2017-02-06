@@ -31,7 +31,7 @@ public class GridWorldView extends View{
     private int gridCellSize = 80;
     private int arrowSize = 12;
 
-    private DecimalFormat decimal2 = new DecimalFormat("#.00");
+    public DecimalFormat decimal2 = new DecimalFormat("#.00");
     private DecimalFormat decimal1 = new DecimalFormat("#.0");
 
     private int rewardTextSize = 15;
@@ -45,6 +45,8 @@ public class GridWorldView extends View{
     Color dowNTransitionColor = Color.BLUE;
     Color leftTransitionColor = Color.GREEN;
     Color rightTransitionColor = Color.GRAY;
+
+    ValueIterationGridView valueIterationView;
 
     @Override
     public void start(Stage primaryStage) {
@@ -63,6 +65,13 @@ public class GridWorldView extends View{
         Button setSimRateButton = new Button("Set");
         setSimRateButton.setOnAction(new editSimRate());
 
+        Button showValueIterationView = new Button("Value Iteration");
+        showValueIterationView.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                displayValueIteration();
+            }
+        });
 
         this.primaryStage = primaryStage;
         canvas = new Canvas();
@@ -71,7 +80,7 @@ public class GridWorldView extends View{
 
         editVariables.getChildren().addAll(setSimRateText, setSimRateField, setSimRateButton);
 
-        underCanvas.getChildren().addAll(editVariables, statusText, this.simViewPanel);
+        underCanvas.getChildren().addAll(editVariables, statusText, this.simViewPanel, showValueIterationView);
 
         root.getChildren().addAll(canvas, underCanvas);
 
@@ -90,6 +99,14 @@ public class GridWorldView extends View{
         primaryStage.setScene(new Scene(root));
         primaryStage.show();
 
+    }
+
+    private void displayValueIteration() {
+        if(valueIterationView == null) {
+            valueIterationView = new ValueIterationGridView();
+            valueIterationView.setupView(new Stage());
+        }
+        valueIterationView.showView();
     }
 
     private void clearLastAgentPosition() {
@@ -187,7 +204,7 @@ public class GridWorldView extends View{
     public void redraw(Canvas canvas) {
         //clearLastAgentPosition();
         clearCanvas(canvas.getGraphicsContext2D(), canvas);
-        drawGridStates(canvas.getGraphicsContext2D());
+        drawGridStates(canvas.getGraphicsContext2D(), true);
         drawAllStateTransitions(true, canvas.getGraphicsContext2D());
         drawAgent(canvas.getGraphicsContext2D());
     }
@@ -196,7 +213,7 @@ public class GridWorldView extends View{
         redraw(canvas);
     }
 
-    private void drawAllStateTransitions(boolean drawArrows, GraphicsContext graphics) {
+    public void drawAllStateTransitions(boolean drawArrows, GraphicsContext graphics) {
             for (State state : GridWorldModel.getInstance().getStates().values()) {
                 drawStateTransition((GridWorldState) state, drawArrows, graphics);
             }
@@ -316,26 +333,31 @@ public class GridWorldView extends View{
     }
 
 
-    private void drawState(GridWorldState state, GraphicsContext gc) {
+    private void drawState(GridWorldState state, GraphicsContext gc, boolean drawReward) {
         Color col = state.getStateColor();
         gc.strokeRect((state.getStateIdentity().x) * gridCellSize, (state.getStateIdentity().y) * gridCellSize, gridCellSize, gridCellSize);
         if (col != null) {
             gc.setFill(state.getStateColor());
             gc.fillRect((state.getStateIdentity().x) * gridCellSize + 2, (state.getStateIdentity().y) * gridCellSize + 2, gridCellSize - 4, gridCellSize - 4);
         }
-
-        double reward = state.getReward();
-        if (reward != 0) {
-            gc.setFont(new Font(rewardTextSize));
-            gc.setFill(Color.RED);
-            String formatedDouble = decimal2.format(reward);
-            gc.fillText(formatedDouble, state.getStateIdentity().x * gridCellSize + (gridCellSize / 2) - (rewardTextSize + formatedDouble.length()), state.getStateIdentity().y * gridCellSize + (gridCellSize / 2), gridCellSize);
+        if(drawReward) {
+            double reward = state.getReward();
+            if (reward != 0) {
+                gc.setFont(new Font(rewardTextSize));
+                gc.setFill(Color.RED);
+                String formatedDouble = decimal2.format(reward);
+                drawTextInState(state, gc, formatedDouble);
+            }
         }
     }
 
-    private void drawGridStates(GraphicsContext gc) {
+    public void drawTextInState(GridWorldState state, GraphicsContext gc, String text) {
+        gc.fillText(text, state.getStateIdentity().x * gridCellSize + (gridCellSize / 2) - (rewardTextSize + text.length()), state.getStateIdentity().y * gridCellSize + (gridCellSize / 2), gridCellSize);
+    }
+
+    public void drawGridStates(GraphicsContext gc, boolean drawReward) {
             for (State state : GridWorldModel.getInstance().getStates().values()) {
-                drawState((GridWorldState) state, gc);
+                drawState((GridWorldState) state, gc, drawReward);
             }
     }
 }

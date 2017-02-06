@@ -17,11 +17,10 @@ public abstract class Controller {
     public void stepSimulation() {
         Action learningChoice = makeActionChoice();
         State result = CurrentSimulationReference.model.decideActionChoiceResult(learningChoice);
-        //System.out.println("Model has chosen the result state to be: \n" + result);
+
         Model.getInstance().mainAgent.doAction(learningChoice);
         Model.getInstance().mainAgent.currentState = result;
-        //System.out.println("Agent current state is: \n" + Model.getInstance().mainAgent.currentState);
-        //System.out.println("Action reward is: \n" + Model.getInstance().mainAgent.currentState.getReward());
+
         updateAgentLearningValues();
     }
 

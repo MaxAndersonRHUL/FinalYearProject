@@ -1,6 +1,8 @@
 package RL;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * Created by max on 18/10/2016.
@@ -38,7 +40,7 @@ public class QLearningController extends Controller{
         } else return a * intPow(a * a, b / 2); //odd  a=a*(a^2)^b/2
     }
 
-    private double sumOfArray(Set<Double> set) {
+    private double sumOfArray(Double[] set) {
         double sum = 0;
         for (Double d : set) {
             sum = sum + d;
@@ -50,55 +52,43 @@ public class QLearningController extends Controller{
         State cs = model.getAgent().currentState;
         List<Action> activeActions = cs.getActiveActions();
         if (activeActions.size() <= 0) {
-            //System.out.println("############################### THE AGENT CAN TAKE NO ACTIONS! #######################################");
+            System.out.println("############################### THE AGENT CAN TAKE NO ACTIONS! #######################################");
             return null;
         }
 
         double max = 0;
-        HashMap<Double, Action> kPowerActionValues = new HashMap<>();
-        for (Action act : activeActions) {
+        Double[] kPowerActionValues = new Double[activeActions.size()];
+        for (int i = 0; i < activeActions.size(); i++) {
+            Action act = activeActions.get(i);
             if (act.getValue() > max) {
                 max = act.getValue();
             }
-            kPowerActionValues.put(Math.pow(explorationValue, (act.getValue())), act);
+            kPowerActionValues[i] = (Math.pow(explorationValue, (act.getValue())));
         }
 
         if (max == 0) {
-            //System.out.println("MOVING THE AGENT RANDOMLY");
             return model.moveAgentRandom();
         }
 
-        double sumValues = sumOfArray(kPowerActionValues.keySet());
+        double sumValues = sumOfArray(kPowerActionValues);
 
         HashMap<Double, Action> temp = new HashMap<>();
 
         double total = 0;
-        for(Iterator<Map.Entry<Double, Action>> it = kPowerActionValues.entrySet().iterator(); it.hasNext(); ) {
-            Map.Entry<Double, Action> entry = it.next();
-            Double value = (entry.getKey() / sumValues);
-            temp.put(value, entry.getValue());
-
-            it.remove();
+        for(int i = 0; i < kPowerActionValues.length; i++) {
+            Double value = (kPowerActionValues[i]) / sumValues;
+            kPowerActionValues[i] = value;
             total = total + value;
         }
 
-        for (Map.Entry<Double, Action> entry : temp.entrySet()) {
-            kPowerActionValues.put(entry.getKey(), entry.getValue());
-        }
-
-        Random random = new Random();
-        int ran = random.nextInt((int) (total * 1000.0));
-
-
+        double ran = ThreadLocalRandom.current().nextDouble(0, total);
 
         double cumulative = 0;
-        //System.out.println("############ Probabilities for state: " + cs + " ##################");
-        for (Map.Entry<Double, Action> entry : kPowerActionValues.entrySet()) {
-            //System.out.println("Action with value: " + entry.getValue().getValue() +", " + entry.getKey());
-            cumulative = cumulative + (entry.getKey()*1000.0);
-            if(ran < cumulative) {
-                //System.out.println("GETTING THE AGENT TO DO ACTION THAT RESULTS IN STATE: \n" + entry.getValue().resultingState);
-                return entry.getValue();
+
+        for (int i = 0; i < kPowerActionValues.length; i++) {
+            cumulative = cumulative + kPowerActionValues[i];
+            if(ran <= cumulative) {
+                return activeActions.get(i);
             }
         }
         return null;
