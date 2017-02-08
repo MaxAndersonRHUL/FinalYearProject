@@ -36,6 +36,10 @@ public abstract class State {
         return activeActions;
     }
 
+    public void removeAllActions() {
+        actions.clear();
+    }
+
     public double getReward() {
         return reward;
     }

@@ -1,5 +1,7 @@
 package RL;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
@@ -17,6 +19,14 @@ public class ValueIterationController {
 
     public HashMap<StateIdentity, State> states;
     public HashMap<StateIdentity, Double> stateValues;
+    public HashMap<StateIdentity, Action> actionsChosen;
+
+    private int currentIterations = 0;
+
+    // How many decimal places the controller considers when deciding if a value has changed or not.
+    // A high number of decimal places result in many iterations that cause no change in the policy towards
+    // the end of the calculation.
+    private int iterationFinishedPrecisionPlaces = 3;
 
     private static ValueIterationController instance;
 
@@ -26,6 +36,17 @@ public class ValueIterationController {
         instance = this;
     }
 
+    // Function for effective rounding of doubles from Stackoverflow user 'Jonik'
+    // http://stackoverflow.com/questions/2808535/round-a-double-to-2-decimal-places
+    public double round(double value) {
+        int places = iterationFinishedPrecisionPlaces;
+        if (places < 0) throw new IllegalArgumentException();
+
+        BigDecimal bd = new BigDecimal(value);
+        bd = bd.setScale(places, RoundingMode.HALF_UP);
+        return bd.doubleValue();
+    }
+
     public static ValueIterationController getInstance() {
         if(instance == null) {
             instance = new ValueIterationController();
@@ -33,30 +54,53 @@ public class ValueIterationController {
         return instance;
     }
 
-    private void iterateValues() {
+    private boolean iterateValues() {
+        boolean valueChanged = false;
         for(Map.Entry<StateIdentity, State> keyVal : states.entrySet()) {
+            if(keyVal.getValue().actions.size() == 0) {
+                continue;
+            }
             double highestVal = getLargestValueFromState(keyVal.getValue());
-            stateValues.replace(keyVal.getKey(), (highestVal * learningValue) + keyVal.getValue().getReward());
+            double newVal = (highestVal * learningValue) + keyVal.getValue().getReward();
+            if(round(newVal) != round(stateValues.get(keyVal.getKey()))) {
+                stateValues.replace(keyVal.getKey(), newVal);
+                valueChanged = true;
+            }
         }
+        return valueChanged;
     }
 
     private double getLargestValueFromState(State state) {
+        return stateValues.get(getLargestActionByValueFromState(state).getMostProbableState().getStateIdentity());
+    }
+
+    private Action getLargestActionByValueFromState(State state) {
         double max = 0;
+        Action maxAction = null;
         for(Action action : state.getActions()) {
             double resultStateValue = stateValues.get(action.getMostProbableState().getStateIdentity());
             if(resultStateValue > max) {
+                maxAction = action;
                 max = resultStateValue;
             }
         }
-        return max;
+        return maxAction;
     }
 
     private void initStateValues() {
         Random rand = new Random();
         stateValues = new HashMap<>();
+        actionsChosen = new HashMap<>();
         for(Map.Entry<StateIdentity, State> keyVal : states.entrySet()) {
+            if(keyVal.getValue().actions.size() == 0) {
+                continue;
+            }
             stateValues.put(keyVal.getKey(), rand.nextDouble());
         }
+    }
+
+    public int getAmountOfIterations (){
+        return currentIterations;
     }
 
     // The hashmap is a shallow copy, and as such, the data in the states is not modified. Instead,
@@ -66,12 +110,11 @@ public class ValueIterationController {
         states = new HashMap<>(CurrentSimulationReference.model.getStates());
     }
 
-    private boolean hasModelConverged() {
-        return false;
-    }
-
     private void finishedCalculating() {
-
+        for(State state : states.values()) {
+            Action nState = getLargestActionByValueFromState(state);
+            actionsChosen.put(state.getStateIdentity(), nState);
+        }
     }
 
     public void beginCalculatingValueIteration() {
@@ -82,13 +125,18 @@ public class ValueIterationController {
         new Thread() {
             public void run() {
                 while (true) {
-
-                    iterateValues();
-                    if(hasModelConverged()) {
+                    if(iterateValues() == false){
                         finishedCalculating();
                         break;
                     }
+                    currentIterations++;
+                    /*
+                    try {
+                        Thread.sleep(100);
+                    } catch (InterruptedException e) {
 
+                    }
+                    */
                 }
             }
         }.start();

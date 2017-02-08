@@ -225,7 +225,7 @@ public class GridWorldView extends View{
         gc.fillText(decimal1.format(act.getValue()), x, y);
     }
 
-    private void drawLeftTransition(int x, int y, GraphicsContext gc) {
+    public void drawLeftTransition(int x, int y, GraphicsContext gc) {
         int calcX = (x) * gridCellSize - (arrowSize / 2);
         int calcY = (int) ((y) * gridCellSize + gridCellSize - (gridCellSize * 0.5));
         drawArrow(gc, calcX, calcY, arrowSize, 90, leftTransitionColor);
@@ -238,7 +238,7 @@ public class GridWorldView extends View{
         drawActionValueText(calcTextX, calcTextY, act, color, gc);
     }
 
-    private void drawRightTransition(int x, int y, GraphicsContext gc) {
+    public void drawRightTransition(int x, int y, GraphicsContext gc) {
         drawArrow(gc, (int) (x * gridCellSize + gridCellSize - (arrowSize / 1.5)), (int) ((y) * gridCellSize + (gridCellSize * 0.4)), arrowSize, 270, rightTransitionColor);
 
         //int calcTextX = (int) (x*gridCellSize + gridCellSize - (arrowSize*2.5));
@@ -252,7 +252,7 @@ public class GridWorldView extends View{
         drawActionValueText(calcTextX, calcTextY, act, color, gc);
     }
 
-    private void drawDownTransition(int x, int y, GraphicsContext gc) {
+    public void drawDownTransition(int x, int y, GraphicsContext gc) {
         drawArrow(gc, (int) (x * gridCellSize + (gridCellSize * 0.5)), y * gridCellSize + (gridCellSize - arrowSize / 2), arrowSize, 360, dowNTransitionColor);
 
         //int calcTextX = (int) (x*gridCellSize + (gridCellSize*0.5));
@@ -266,7 +266,7 @@ public class GridWorldView extends View{
         drawActionValueText(calcTextX, calcTextY, act, color, gc);
     }
 
-    private void drawUpTransition(int x, int y, GraphicsContext gc) {
+    public void drawUpTransition(int x, int y, GraphicsContext gc) {
         drawArrow(gc, (int) (x * gridCellSize + (gridCellSize * 0.3)), y * gridCellSize - (arrowSize / 2), arrowSize, 180, upTransitionColor);
 
         //int calcTextX =(int) (x*gridCellSize + (gridCellSize*0.3));

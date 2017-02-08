@@ -26,12 +26,14 @@ import javafx.stage.Stage;
  */
 public class GridWorldLauncher extends Application {
 
-    public static TextField gridSizeXField;
-    public static TextField gridSizeYField;
-    public static TextField gridCellSizeField;
-    public static TextField gridArrowSizeField;
-    public static TextField gridFontSizeField;
+    private static TextField gridSizeXField;
+    private static TextField gridSizeYField;
+    private static TextField gridCellSizeField;
+    private static TextField gridArrowSizeField;
+    private static TextField gridFontSizeField;
     public static TextField learningIterationSpeedField;
+    private static TextField startRewardLocationXField;
+    private static TextField startRewardLocationYField;
 
     public static Stage primaryStage;
 
@@ -78,6 +80,19 @@ public class GridWorldLauncher extends Application {
         learningIterationSpeedText.setFont(stdFont);
         learningIterationSpeedField = new TextField("2");
 
+        HBox rewardCoordinate = new HBox(10);
+        Text rewardCoordinateText = new Text("Reward Coordinate");
+        rewardCoordinateText.setFont(stdFont);
+        startRewardLocationXField = new TextField("1");
+        Text xCoord = new Text("X:");
+        xCoord.setFont(stdFont);
+        startRewardLocationYField = new TextField("1");
+        Text yCoord = new Text("Y:");
+        yCoord.setFont(stdFont);
+
+        startRewardLocationXField.setPrefColumnCount(2);
+        startRewardLocationYField.setPrefColumnCount(2);
+
         Button creatorButton = new Button("Create world");
         creatorButton.setOnAction(new creatorButtonHandler());
 
@@ -90,9 +105,10 @@ public class GridWorldLauncher extends Application {
         gridArrowSize.getChildren().addAll(gridArrowSizeText, gridArrowSizeField);
         gridFontSize.getChildren().addAll(gridFontSizeText, gridFontSizeField);
         learningIterationSpeed.getChildren().addAll(learningIterationSpeedText, learningIterationSpeedField);
+        rewardCoordinate.getChildren().addAll(rewardCoordinateText, xCoord, startRewardLocationXField, yCoord, startRewardLocationYField);
         endButtons.getChildren().addAll(startButton, creatorButton);
 
-        root.getChildren().addAll(titleText, gridSizeX, gridSizeY, gridCellSize, gridArrowSize, gridFontSize, learningIterationSpeed, endButtons);
+        root.getChildren().addAll(titleText, gridSizeX, gridSizeY, gridCellSize, gridArrowSize, gridFontSize, learningIterationSpeed, rewardCoordinate, endButtons);
         root.setPadding(new Insets(10, 10, 10, 10));
 
         root.setAlignment(Pos.TOP_CENTER);
@@ -102,6 +118,7 @@ public class GridWorldLauncher extends Application {
         gridArrowSize.setAlignment(Pos.TOP_CENTER);
         gridFontSize.setAlignment(Pos.TOP_CENTER);
         learningIterationSpeed.setAlignment(Pos.TOP_CENTER);
+        rewardCoordinate.setAlignment(Pos.TOP_CENTER);
         endButtons.setAlignment(Pos.TOP_CENTER);
 
         return root;
@@ -155,6 +172,10 @@ public class GridWorldLauncher extends Application {
         view.setTextSize(Integer.parseInt(GridWorldLauncher.gridFontSizeField.getCharacters().toString()));
 
     }
+
+    public static void setupInitialRewardStateFromField() {
+        GridWorldModel.getInstance().getStates().get(new GridWorldCoordinate(Integer.parseInt(startRewardLocationXField.getText()), Integer.parseInt(startRewardLocationYField.getText()))).setReward(1);
+    }
 }
 
 class creatorButtonHandler implements EventHandler<ActionEvent> {
@@ -191,6 +212,8 @@ class startGridWorldQLearningButtonHandler implements EventHandler<ActionEvent> 
 
         CurrentSimulationReference.model = GridWorldModel.getInstance();
         GridWorldModel.getInstance().setupFullGrid();
+
+        GridWorldLauncher.setupInitialRewardStateFromField();
 
         CurrentSimulationReference.view = GridWorldView.getInstance();
         GridWorldView.getInstance().setupView(GridWorldLauncher.primaryStage);

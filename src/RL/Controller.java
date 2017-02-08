@@ -16,8 +16,14 @@ public abstract class Controller {
 
     public void stepSimulation() {
         Action learningChoice = makeActionChoice();
-        State result = CurrentSimulationReference.model.decideActionChoiceResult(learningChoice);
 
+        // makeActionChoice should only return null if there are no actions to take.
+        // If there are no actions, we don't need to update any values.
+        if(learningChoice == null) {
+            return;
+        }
+
+        State result = CurrentSimulationReference.model.decideActionChoiceResult(learningChoice);
         Model.getInstance().mainAgent.doAction(learningChoice);
         Model.getInstance().mainAgent.currentState = result;
 

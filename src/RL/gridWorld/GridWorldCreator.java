@@ -3,6 +3,7 @@ package RL.gridWorld;
 import RL.Action;
 import RL.CurrentSimulationReference;
 import RL.QLearningController;
+import RL.State;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Pos;
@@ -12,6 +13,7 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
@@ -132,7 +134,21 @@ public class GridWorldCreator {
         state.setStateColor(selectedColor);
     }
 
-    public void handleCanvasClicked(MouseEvent event) {
+    private void makeWallState(GridWorldState state) {
+        state.removeAllActions();
+        state.setStateColor(Color.GRAY);
+        for(State searchState : GridWorldModel.getInstance().getStates().values()) {
+            if(searchState == state) {
+                continue;
+            }
+            Action act = GridWorldModel.getInstance().getStateTransitionTo(searchState, state);
+            if(act != null) {
+                searchState.getActions().remove(act);
+            }
+        }
+    }
+
+    void handleCanvasClicked(MouseEvent event) {
         double x = event.getX();
         double y = event.getY();
         System.out.println("X: " + x);
@@ -140,26 +156,32 @@ public class GridWorldCreator {
         //GridWorldState selected = GridWorldModel.getInstance().getStates()[(int) (y / gridView.getGridCellSize())] [(int) (x / gridView.getGridCellSize())];
         GridWorldState selected = (GridWorldState) GridWorldModel.getInstance().getStates().get(new GridWorldCoordinate((int) (x / gridView.getGridCellSize()) , (int) (y / gridView.getGridCellSize())));
 
-
-        if(currentlySelected == selected) {
-            deselectCurrent();
-        } else if (currentlySelected == null) {
-            setCurrentlySelected(selected);
-        } else if (GridWorldModel.getInstance().canStateTransitionTo(currentlySelected, selected)) {
-            boolean found = false;
-            for (Action act : currentlySelected.getActions()) {
-                if (act.getMostProbableState() == selected) {
-                    found = true;
-                    currentlySelected.removeAction(act);
-                    break;
+        if(event.getButton() == MouseButton.SECONDARY) {
+            if(currentlySelected == null) {
+                makeWallState(selected);
+            }
+        }
+        if(event.getButton() == MouseButton.PRIMARY) {
+            if (currentlySelected == selected) {
+                deselectCurrent();
+            } else if (currentlySelected == null) {
+                setCurrentlySelected(selected);
+            } else if (GridWorldModel.getInstance().canStateTransitionTo(currentlySelected, selected)) {
+                boolean found = false;
+                for (Action act : currentlySelected.getActions()) {
+                    if (act.getMostProbableState() == selected) {
+                        found = true;
+                        currentlySelected.removeAction(act);
+                        break;
+                    }
                 }
+                if (!found) {
+                    System.out.println("Adding action");
+                    currentlySelected.addAction(new Action(selected, 0));
+                }
+            } else {
+                deselectCurrent();
             }
-            if (!found) {
-                System.out.println("Adding action");
-                currentlySelected.addAction(new Action(selected, 0));
-            }
-        } else {
-            deselectCurrent();
         }
         gridView.redraw(canvas);
     }

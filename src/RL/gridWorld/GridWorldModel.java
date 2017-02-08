@@ -46,9 +46,6 @@ public class GridWorldModel extends Model {
         for (int y = 0; y < gridSizeY; y++) {
             for (int x = 0; x < gridSizeX; x++) {
                 GridWorldState state = new GridWorldState(new GridWorldCoordinate(x, y));
-                if(y == 1  && x == 1) {
-                    state.reward = 5;
-                }
                 addState(state);
             }
         }
@@ -63,7 +60,8 @@ public class GridWorldModel extends Model {
                     states.get(new GridWorldCoordinate(x-1, y)).addActionToState(identityState);
                 }
                 if (x < gridSizeX - 1) {
-                    states.get(new GridWorldCoordinate(x+1, y)).addActionToState(identityState);
+                    states.get(new GridWorldCoordinate(x+1, y)
+                    ).addActionToState(identityState);
                 }
                 if (y < gridSizeY - 1) {
                     states.get(new GridWorldCoordinate(x, y+1)).addActionToState(identityState);
