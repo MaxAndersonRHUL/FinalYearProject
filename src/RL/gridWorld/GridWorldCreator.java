@@ -64,7 +64,7 @@ public class GridWorldCreator {
             @Override
             public void handle(ActionEvent event) {
                 GridWorldModel.getInstance().setupFullGrid();
-                gridView.redraw(canvas);
+                gridView.fullRedraw(canvas);
             }
         });
 
@@ -80,7 +80,7 @@ public class GridWorldCreator {
         underCanvas.setAlignment(Pos.TOP_CENTER);
         root.setAlignment(Pos.TOP_CENTER);
 
-        gridView.redraw(canvas);
+        gridView.fullRedraw(canvas);
 
         Scene scene = new Scene(root);
 
@@ -101,7 +101,7 @@ public class GridWorldCreator {
 
     private void keyPressed(KeyCode key) {
         if(currentlySelected != null) {
-            gridView.redraw(canvas);
+            gridView.fullRedraw(canvas);
             if(key.isDigitKey()) {
                 currentlyTyping = currentlyTyping + key.getName();
                 gridView.drawTextInState(currentlySelected, graphics, currentlyTyping);
@@ -117,7 +117,7 @@ public class GridWorldCreator {
                     double dub = Double.parseDouble(currentlyTyping);
                     currentlySelected.setReward(dub);
                     currentlyTyping = null;
-                    gridView.redraw(canvas);
+                    gridView.fullRedraw(canvas);
                 }
             }
         }
@@ -183,7 +183,7 @@ public class GridWorldCreator {
                 deselectCurrent();
             }
         }
-        gridView.redraw(canvas);
+        gridView.fullRedraw(canvas);
     }
 
 }

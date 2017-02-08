@@ -36,8 +36,7 @@ public class GridWorldView extends View{
 
     private int rewardTextSize = 15;
 
-    private int lastDrawnAgentPosX = 0;
-    private int lastDrawnAgentPosY = 0;
+    private GridWorldState agentLastDrawnState;
 
     private static GridWorldView instance;
 
@@ -99,6 +98,8 @@ public class GridWorldView extends View{
         primaryStage.setScene(new Scene(root));
         primaryStage.show();
 
+        fullRedraw();
+
     }
 
     private void displayValueIteration() {
@@ -111,7 +112,24 @@ public class GridWorldView extends View{
 
     private void clearLastAgentPosition() {
         graphicsCont.setFill(Color.WHITE);
-        graphicsCont.fillRect(lastDrawnAgentPosX * gridCellSize + (gridCellSize * 0.25), lastDrawnAgentPosY * gridCellSize + (gridCellSize * 0.25), gridCellSize / 2, gridCellSize / 2);
+        GridWorldCoordinate coord = agentLastDrawnState.getStateIdentity();
+        graphicsCont.fillRect(coord.x * gridCellSize, coord.y * gridCellSize, gridCellSize, gridCellSize);
+    }
+
+    public void drawAdjacentTransitions(GridWorldCoordinate coord, Canvas canvas) {
+        if(coord.x - 1 >= 0) {
+            GridWorldState state = (GridWorldState) GridWorldModel.getInstance().getStates().get(new GridWorldCoordinate(coord.x -1, coord.y));
+            drawStateTransition(state, true, canvas.getGraphicsContext2D(), false);
+        } if(coord.x + 1 < GridWorldModel.getInstance().getGridSizeX()) {
+            GridWorldState state = (GridWorldState) GridWorldModel.getInstance().getStates().get(new GridWorldCoordinate(coord.x +1, coord.y));
+            drawStateTransition(state, true, canvas.getGraphicsContext2D(), false);
+        } if(coord.y - 1 >= 0) {
+            GridWorldState state = (GridWorldState) GridWorldModel.getInstance().getStates().get(new GridWorldCoordinate(coord.x, coord.y - 1));
+            drawStateTransition(state, true, canvas.getGraphicsContext2D(), false);
+        } if(coord.y + 1 < GridWorldModel.getInstance().getGridSizeY()) {
+            GridWorldState state = (GridWorldState) GridWorldModel.getInstance().getStates().get(new GridWorldCoordinate(coord.x, coord.y + 1));
+            drawStateTransition(state, true, canvas.getGraphicsContext2D(), false);
+        }
     }
 
     public void drawAgent() {
@@ -126,8 +144,7 @@ public class GridWorldView extends View{
         GridWorldState state = (GridWorldState) agent.currentState;
         gc.setFill(Color.BLACK);
         gc.fillRect(state.getStateIdentity().x * gridCellSize + (gridCellSize * 0.25), state.getStateIdentity().y * gridCellSize + (gridCellSize * 0.25), gridCellSize / 2, gridCellSize / 2);
-        lastDrawnAgentPosX = state.getStateIdentity().x;
-        lastDrawnAgentPosY = state.getStateIdentity().y;
+        agentLastDrawnState = (GridWorldState) agent.currentState;
     }
 
     public int getGridCellSize() {
@@ -201,7 +218,7 @@ public class GridWorldView extends View{
         context.fillPolygon(xPoints, yPoints, 8);
     }
 
-    public void redraw(Canvas canvas) {
+    public void fullRedraw(Canvas canvas) {
         //clearLastAgentPosition();
         clearCanvas(canvas.getGraphicsContext2D(), canvas);
         drawGridStates(canvas.getGraphicsContext2D(), true);
@@ -209,13 +226,23 @@ public class GridWorldView extends View{
         drawAgent(canvas.getGraphicsContext2D());
     }
 
-    public void redraw() {
-        redraw(canvas);
+    public void minRedraw(Canvas canvas) {
+        clearLastAgentPosition();
+        drawState(agentLastDrawnState, canvas.getGraphicsContext2D(), true);
+        drawStateTransition(agentLastDrawnState, true, canvas.getGraphicsContext2D(), true);
+        // Arrows overlap between 2 states. Clearing the state and redrawing it therefore requires
+        // adjacent states transitions to also be redrawn.
+        drawAdjacentTransitions(agentLastDrawnState.getStateIdentity(), canvas);
+        drawAgent();
+    }
+
+    public void fullRedraw() {
+        fullRedraw(canvas);
     }
 
     public void drawAllStateTransitions(boolean drawArrows, GraphicsContext graphics) {
             for (State state : GridWorldModel.getInstance().getStates().values()) {
-                drawStateTransition((GridWorldState) state, drawArrows, graphics);
+                drawStateTransition((GridWorldState) state, drawArrows, graphics, true);
             }
     }
 
@@ -281,7 +308,7 @@ public class GridWorldView extends View{
         drawActionValueText(calcTextX, calcTextY, act, color, gc);
     }
 
-    private void drawStateTransition(GridWorldState state, boolean drawArrows, GraphicsContext gc) {
+    private void drawStateTransition(GridWorldState state, boolean drawArrows, GraphicsContext gc, boolean drawText) {
         GridWorldModel model = GridWorldModel.getInstance();
         HashMap<StateIdentity, State> states = model.getStates();
         if (state.getStateIdentity().x > 0) {
@@ -291,7 +318,9 @@ public class GridWorldView extends View{
                 if (drawArrows) {
                     drawLeftTransition(state.getStateIdentity().x, state.getStateIdentity().y, gc);
                 }
-                drawLeftTransitionValue(state.getStateIdentity().x, state.getStateIdentity().y, foundAction, leftTransitionColor, gc);
+                if(drawText) {
+                    drawLeftTransitionValue(state.getStateIdentity().x, state.getStateIdentity().y, foundAction, leftTransitionColor, gc);
+                }
             }
         }
         if (state.getStateIdentity().x < model.getGridSizeX() - 1) {
@@ -301,7 +330,9 @@ public class GridWorldView extends View{
                 if (drawArrows) {
                     drawRightTransition(state.getStateIdentity().x, state.getStateIdentity().y, gc);
                 }
-                drawRightTransitionValue(state.getStateIdentity().x, state.getStateIdentity().y, foundAction, rightTransitionColor, gc);
+                if(drawText) {
+                    drawRightTransitionValue(state.getStateIdentity().x, state.getStateIdentity().y, foundAction, rightTransitionColor, gc);
+                }
             }
         }
         if (state.getStateIdentity().y < model.getGridSizeY() - 1) {
@@ -311,7 +342,9 @@ public class GridWorldView extends View{
                 if (drawArrows) {
                     drawDownTransition(state.getStateIdentity().x, state.getStateIdentity().y, gc);
                 }
-                drawDownTransitionValue(state.getStateIdentity().x, state.getStateIdentity().y, foundAction, dowNTransitionColor, gc);
+                if(drawText) {
+                    drawDownTransitionValue(state.getStateIdentity().x, state.getStateIdentity().y, foundAction, dowNTransitionColor, gc);
+                }
             }
         }
         if (state.getStateIdentity().y > 0) {
@@ -321,7 +354,9 @@ public class GridWorldView extends View{
                 if (drawArrows) {
                     drawUpTransition(state.getStateIdentity().x, state.getStateIdentity().y, gc);
                 }
-                drawUpTransitionValue(state.getStateIdentity().x, state.getStateIdentity().y, foundAction, upTransitionColor, gc);
+                if(drawText) {
+                    drawUpTransitionValue(state.getStateIdentity().x, state.getStateIdentity().y, foundAction, upTransitionColor, gc);
+                }
             }
         }
     }
@@ -332,6 +367,9 @@ public class GridWorldView extends View{
         canvas.setWidth(model.getGridSizeX() * gridCellSize);
     }
 
+    public void redraw() {
+        minRedraw(canvas);
+    }
 
     private void drawState(GridWorldState state, GraphicsContext gc, boolean drawReward) {
         Color col = state.getStateColor();
