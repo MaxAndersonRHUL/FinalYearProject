@@ -41,8 +41,7 @@ public class XOView extends View {
         gc = canvas.getGraphicsContext2D();
         setCanvasSize(canvas);
 
-        pausePlay = new Button("PAUSE");
-        pausePlay.setOnAction(new pauseSimulation());
+
 
         Text setSimRateText = new Text("Set simulation rate: ");
         setSimRateField = new TextField("5");
@@ -140,20 +139,6 @@ public class XOView extends View {
         return instance;
     }
 }
-
-class pauseSimulation implements EventHandler<ActionEvent> {
-    public void handle(ActionEvent event) {
-        if(CurrentSimulationReference.controller.executionPaused) {
-            CurrentSimulationReference.controller.playExecution();
-            XOView.getInstance().pausePlay.setText("Pause");
-        } else  {
-            CurrentSimulationReference.controller.pauseExecution();
-            XOView.getInstance().pausePlay.setText("Play");
-        }
-
-    }
-}
-
 
 class editSimRate implements EventHandler<ActionEvent> {
     public void handle(ActionEvent event) {

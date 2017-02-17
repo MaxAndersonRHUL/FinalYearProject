@@ -44,6 +44,27 @@ public abstract class State {
         return reward;
     }
 
+    public List<Action> getHighestActionValues() {
+        return getHighestActionValuesToPrecision(Double.SIZE - 1);
+    }
+
+    public List<Action> getHighestActionValuesToPrecision(int precision) {
+        Model model = CurrentSimulationReference.model;
+        List<Action> highestActions = new ArrayList<Action>();
+        double highestVal = -1;
+        for(Action act : actions) {
+            double actValue = model.round(act.value, precision);
+            if(actValue > highestVal) {
+                highestActions.clear();
+                highestActions.add(act);
+                highestVal = actValue;
+            } else if(actValue == highestVal) {
+                highestActions.add(act);
+            }
+        }
+        return highestActions;
+    }
+
     public void setReward(double reward) {
         this.reward = reward;
     }

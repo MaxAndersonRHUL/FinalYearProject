@@ -1,5 +1,7 @@
 package RL;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,8 +23,20 @@ public class Model {
 
     protected State startingState;
 
+    int convergenceCheckPrecision = 2;
+
     public Model() {
         instance = this;
+    }
+
+    // Function for effective rounding of doubles from Stackoverflow user 'Jonik'
+    // http://stackoverflow.com/questions/2808535/round-a-double-to-2-decimal-places
+    public double round(double value, int places) {
+        if (places < 0) throw new IllegalArgumentException();
+
+        BigDecimal bd = new BigDecimal(value);
+        bd = bd.setScale(places, RoundingMode.HALF_UP);
+        return bd.doubleValue();
     }
 
     public void addState(State state, StateIdentity identity) {
@@ -91,6 +105,49 @@ public class Model {
         int num = rng.nextInt(actions.size());
         Action exec = actions.get(num);
         return exec;
+    }
+
+    // Used to find how close the current model has converged on the true policy. Finding the hashmap from state identities
+    // to actions that form the optimal policy can be found via the ValueIterationController.
+
+    public double calculateCurrentConvergancePercent(HashMap<StateIdentity, List<Action>> actionsChosen) {
+        int numberOfCorrectActions = 0;
+        int totalActions = 0;
+        for(State state : states.values()) {
+            totalActions++;
+
+            List<Action> actionChosen = actionsChosen.get(state.getStateIdentity());
+
+            if(actionChosen == null) {
+                continue;
+            }
+
+            List<Action> highestActions = state.getHighestActionValuesToPrecision(convergenceCheckPrecision);
+
+            if(highestActions.size() != actionChosen.size()) {
+                continue;
+            }
+
+            boolean complete = true;
+            for(Action nsAction : actionChosen) {
+                boolean contained = false;
+                for(Action nbAction : highestActions) {
+                    if(nsAction == nbAction) {
+                        contained = true;
+                        break;
+                    }
+                }
+                if(!contained) {
+                    complete = false;
+                    break;
+                }
+            }
+            if(complete) {
+                numberOfCorrectActions++;
+            }
+        }
+
+        return ((double) numberOfCorrectActions / (double)totalActions) * 100.0;
     }
 
     // Returns null if no actions on state, or if all actions are 0.

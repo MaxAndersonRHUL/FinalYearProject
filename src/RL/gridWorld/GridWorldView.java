@@ -27,6 +27,7 @@ public class GridWorldView extends View{
     TextField setSimRateField;
 
     private GraphicsContext graphicsCont;
+    private InfiniteCanvas infiniteCanvas;
 
     private int gridCellSize = 80;
     private int arrowSize = 12;
@@ -34,9 +35,17 @@ public class GridWorldView extends View{
     public DecimalFormat decimal2 = new DecimalFormat("#.00");
     private DecimalFormat decimal1 = new DecimalFormat("#.0");
 
+    private Text currentConvergence;
+
     private int rewardTextSize = 15;
 
+    // Instead of redrawing the whole canvas, the agents last drawn state is saved, so only the local
+    // changes to the view need be updated. However, when running the simulation at high iterations per
+    // second, the agents position is not always properly removed with 1 look behind. This appears to be
+    // a bug with javaFX, unless I'm missing something! Therefore, the view stores the previous 2 drawn locations,
+    // and updates them every frame.
     private GridWorldState agentLastDrawnState;
+    private GridWorldState agentDoubleLastDrawnState;
 
     private static GridWorldView instance;
 
@@ -64,6 +73,11 @@ public class GridWorldView extends View{
         Button setSimRateButton = new Button("Set");
         setSimRateButton.setOnAction(new editSimRate());
 
+        currentConvergence = new Text("Current Convergence: 0%");
+        currentConvergence.setFont(new Font(16));
+
+
+
         Button showValueIterationView = new Button("Value Iteration");
         showValueIterationView.setOnAction(new EventHandler<ActionEvent>() {
             @Override
@@ -77,11 +91,18 @@ public class GridWorldView extends View{
         setCanvasSize(canvas);
         graphicsCont = canvas.getGraphicsContext2D();
 
+        infiniteCanvas = new InfiniteCanvas(30000,30000, canvas);
+
+        //ScrollPane scroll = new ScrollPane(canvas);
+        //scroll.setPannable(true);
+        //scroll.setMaxHeight(Screen.getMainScreen().getHeight());
+        //scroll.setMaxWidth(Screen.getMainScreen().getWidth());
+
         editVariables.getChildren().addAll(setSimRateText, setSimRateField, setSimRateButton);
 
-        underCanvas.getChildren().addAll(editVariables, statusText, this.simViewPanel, showValueIterationView);
+        underCanvas.getChildren().addAll(editVariables, statusText, this.simViewPanel, simViewPanel2, showValueIterationView, currentConvergence);
 
-        root.getChildren().addAll(canvas, underCanvas);
+        root.getChildren().addAll(infiniteCanvas.getScrollView(), underCanvas);
 
         underCanvas.setAlignment(Pos.TOP_CENTER);
         statusText.setAlignment(Pos.TOP_CENTER);
@@ -90,7 +111,7 @@ public class GridWorldView extends View{
 
         //drawArrow(graphicsCont, 0,0, 25, 270, Color.RED);
 
-        setCanvasSize(canvas);
+        //setCanvasSize(canvas);
 
         //drawRotatedImage(graphicsCont, rect, 20, 10,10);
 
@@ -100,13 +121,15 @@ public class GridWorldView extends View{
 
         fullRedraw();
 
-    }
-
-    private void displayValueIteration() {
         if(valueIterationView == null) {
             valueIterationView = new ValueIterationGridView();
             valueIterationView.setupView(new Stage());
         }
+
+    }
+
+    private void displayValueIteration() {
+
         valueIterationView.showView();
     }
 
@@ -114,6 +137,10 @@ public class GridWorldView extends View{
         graphicsCont.setFill(Color.WHITE);
         GridWorldCoordinate coord = agentLastDrawnState.getStateIdentity();
         graphicsCont.fillRect(coord.x * gridCellSize, coord.y * gridCellSize, gridCellSize, gridCellSize);
+        if(agentDoubleLastDrawnState != null) {
+            GridWorldCoordinate coord2 = agentDoubleLastDrawnState.getStateIdentity();
+            graphicsCont.fillRect(coord2.x * gridCellSize, coord2.y * gridCellSize, gridCellSize, gridCellSize);
+        }
     }
 
     public void drawAdjacentTransitions(GridWorldCoordinate coord, Canvas canvas) {
@@ -144,7 +171,8 @@ public class GridWorldView extends View{
         GridWorldState state = (GridWorldState) agent.currentState;
         gc.setFill(Color.BLACK);
         gc.fillRect(state.getStateIdentity().x * gridCellSize + (gridCellSize * 0.25), state.getStateIdentity().y * gridCellSize + (gridCellSize * 0.25), gridCellSize / 2, gridCellSize / 2);
-        agentLastDrawnState = (GridWorldState) agent.currentState;
+        agentDoubleLastDrawnState = agentLastDrawnState;
+        agentLastDrawnState = state;
     }
 
     public int getGridCellSize() {
@@ -228,12 +256,21 @@ public class GridWorldView extends View{
 
     public void minRedraw(Canvas canvas) {
         clearLastAgentPosition();
+        if(agentDoubleLastDrawnState != null) {
+            drawState(agentDoubleLastDrawnState, canvas.getGraphicsContext2D(), true);
+            drawStateTransition(agentDoubleLastDrawnState, true, canvas.getGraphicsContext2D(), true);
+            drawAdjacentTransitions(agentDoubleLastDrawnState.getStateIdentity(), canvas);
+        }
         drawState(agentLastDrawnState, canvas.getGraphicsContext2D(), true);
         drawStateTransition(agentLastDrawnState, true, canvas.getGraphicsContext2D(), true);
         // Arrows overlap between 2 states. Clearing the state and redrawing it therefore requires
         // adjacent states transitions to also be redrawn.
         drawAdjacentTransitions(agentLastDrawnState.getStateIdentity(), canvas);
         drawAgent();
+
+        if(ValueIterationController.getInstance().actionsChosen != null) {
+            currentConvergence.setText("Policy Accuracy: " + decimal2.format(CurrentSimulationReference.model.calculateCurrentConvergancePercent(ValueIterationController.getInstance().actionsChosen)) + "%");
+        }
     }
 
     public void fullRedraw() {
@@ -363,6 +400,8 @@ public class GridWorldView extends View{
 
     public void setCanvasSize(Canvas canvas) {
         GridWorldModel model = GridWorldModel.getInstance();
+        //canvas.setHeight(Screen.getMainScreen().getHeight() / 3);
+        //canvas.setWidth(Screen.getMainScreen().getWidth() / 3);
         canvas.setHeight(model.getGridSizeY() * gridCellSize);
         canvas.setWidth(model.getGridSizeX() * gridCellSize);
     }

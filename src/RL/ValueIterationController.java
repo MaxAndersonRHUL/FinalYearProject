@@ -2,9 +2,7 @@ package RL;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 
 /**
  * Created by max on 31/01/2017.
@@ -19,7 +17,7 @@ public class ValueIterationController {
 
     public HashMap<StateIdentity, State> states;
     public HashMap<StateIdentity, Double> stateValues;
-    public HashMap<StateIdentity, Action> actionsChosen;
+    public HashMap<StateIdentity, List<Action>> actionsChosen;
 
     private int currentIterations = 0;
 
@@ -71,20 +69,23 @@ public class ValueIterationController {
     }
 
     private double getLargestValueFromState(State state) {
-        return stateValues.get(getLargestActionByValueFromState(state).getMostProbableState().getStateIdentity());
+        return stateValues.get(getLargestActionByValueFromState(state).get(0).getMostProbableState().getStateIdentity());
     }
 
-    private Action getLargestActionByValueFromState(State state) {
-        double max = 0;
-        Action maxAction = null;
+    private List<Action> getLargestActionByValueFromState(State state) {
+        List<Action> highestActions = new ArrayList<Action>();
+        double highestVal = -1;
         for(Action action : state.getActions()) {
             double resultStateValue = stateValues.get(action.getMostProbableState().getStateIdentity());
-            if(resultStateValue > max) {
-                maxAction = action;
-                max = resultStateValue;
+            if(resultStateValue > highestVal) {
+                highestActions.clear();
+                highestActions.add(action);
+                highestVal = resultStateValue;
+            } else if(resultStateValue == highestVal) {
+                highestActions.add(action);
             }
         }
-        return maxAction;
+        return highestActions;
     }
 
     private void initStateValues() {
@@ -112,7 +113,7 @@ public class ValueIterationController {
 
     private void finishedCalculating() {
         for(State state : states.values()) {
-            Action nState = getLargestActionByValueFromState(state);
+            List<Action> nState = getLargestActionByValueFromState(state);
             actionsChosen.put(state.getStateIdentity(), nState);
         }
     }

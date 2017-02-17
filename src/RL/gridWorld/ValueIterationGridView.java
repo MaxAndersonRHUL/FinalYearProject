@@ -1,9 +1,6 @@
 package RL.gridWorld;
 
-import RL.State;
-import RL.StateIdentity;
-import RL.ValueIterationController;
-import RL.View;
+import RL.*;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -15,6 +12,7 @@ import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -76,22 +74,27 @@ public class ValueIterationGridView extends View {
 
             if(ValueIterationController.getInstance().actionsChosen.containsKey(entry.getKey())) {
 
-                GridWorldCoordinate destCoord = (GridWorldCoordinate) ValueIterationController.getInstance().actionsChosen.get(entry.getKey()).getMostProbableState().getStateIdentity();
-                GridWorldCoordinate srcCoord = (GridWorldCoordinate) entry.getKey();
 
-                if(destCoord.x + 1 == srcCoord.x && destCoord.y == srcCoord.y) {
-                    GridWorldView.getInstance().drawLeftTransition(srcCoord.x, srcCoord.y, graphicsCont);
-                }
-                if(destCoord.x - 1 == srcCoord.x && destCoord.y == srcCoord.y) {
-                    GridWorldView.getInstance().drawRightTransition(srcCoord.x, srcCoord.y, graphicsCont);
-                }
-                if(destCoord.x == srcCoord.x && destCoord.y + 1 == srcCoord.y) {
-                    GridWorldView.getInstance().drawUpTransition(srcCoord.x, srcCoord.y, graphicsCont);
-                }
-                if(destCoord.x == srcCoord.x && destCoord.y - 1 == srcCoord.y) {
-                    GridWorldView.getInstance().drawDownTransition(srcCoord.x, srcCoord.y, graphicsCont);
-                }
+                List<Action> IDs = ValueIterationController.getInstance().actionsChosen.get(entry.getKey());
 
+                for(Action nsAction : IDs) {
+
+                    GridWorldCoordinate destCoord = (GridWorldCoordinate) nsAction.getMostProbableState().getStateIdentity();
+                    GridWorldCoordinate srcCoord = (GridWorldCoordinate) entry.getKey();
+
+                    if (destCoord.x + 1 == srcCoord.x && destCoord.y == srcCoord.y) {
+                        GridWorldView.getInstance().drawLeftTransition(srcCoord.x, srcCoord.y, graphicsCont);
+                    }
+                    if (destCoord.x - 1 == srcCoord.x && destCoord.y == srcCoord.y) {
+                        GridWorldView.getInstance().drawRightTransition(srcCoord.x, srcCoord.y, graphicsCont);
+                    }
+                    if (destCoord.x == srcCoord.x && destCoord.y + 1 == srcCoord.y) {
+                        GridWorldView.getInstance().drawUpTransition(srcCoord.x, srcCoord.y, graphicsCont);
+                    }
+                    if (destCoord.x == srcCoord.x && destCoord.y - 1 == srcCoord.y) {
+                        GridWorldView.getInstance().drawDownTransition(srcCoord.x, srcCoord.y, graphicsCont);
+                    }
+                }
             }
         }
     }

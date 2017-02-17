@@ -14,8 +14,17 @@ public abstract class Controller {
 
     public boolean executionPaused = false;
 
+    private boolean pureRandomMode;
+
     public void stepSimulation() {
-        Action learningChoice = makeActionChoice();
+
+        Action learningChoice;
+
+        if(pureRandomMode) {
+            learningChoice = CurrentSimulationReference.model.moveAgentRandom();
+        } else {
+            learningChoice = makeActionChoice();
+        }
 
         // makeActionChoice should only return null if there are no actions to take.
         // If there are no actions, we don't need to update any values.
@@ -28,6 +37,14 @@ public abstract class Controller {
         Model.getInstance().mainAgent.currentState = result;
 
         updateAgentLearningValues();
+    }
+
+    void setPureRandomMode(boolean mode) {
+        pureRandomMode = mode;
+    }
+
+    boolean getPureRandomMode() {
+        return pureRandomMode;
     }
 
 
