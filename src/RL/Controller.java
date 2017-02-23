@@ -4,7 +4,7 @@ import java.util.concurrent.ConcurrentLinkedDeque;
 
 public abstract class Controller {
 
-    protected double explorationValue = 2;
+    protected ExperimentableValue explorationValue = new ExperimentableValue(2, "Exploration Value");
 
     private long timeSaveTemp;
     private int targetFPS = 8;
@@ -50,10 +50,10 @@ public abstract class Controller {
 
     public void setExploValue(double value) {
         if(value < 0.01) {
-            explorationValue = 0.01;
+            explorationValue.setValue(0.01);
             return;
         }
-        explorationValue = value;
+        explorationValue.setValue(value);
     }
 
     public void setIterationSpeed(int iterationsPerSecond) {
@@ -123,6 +123,7 @@ public abstract class Controller {
                             totalIterations++;
                             stepSimulation();
                             CurrentSimulationReference.model.stateChanged();
+                            ExperimentationController.iterationOccurred();
                         }
                     }
                 }

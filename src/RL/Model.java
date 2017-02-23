@@ -25,6 +25,8 @@ public class Model {
 
     int convergenceCheckPrecision = 2;
 
+    ExperimentableValue currentConvergencePercent = new ExperimentableValue(0.0, "Policy Accuracy (%)");
+
     public Model() {
         instance = this;
     }
@@ -52,6 +54,11 @@ public class Model {
 
     }
 
+    public void setStartingState(State state) {
+        startingState = state;
+    }
+
+    // By default, a model simply returns the first state in an action. This will typically be overridden by child classes.
     public State decideActionChoiceResult(Action action) {
         for(Map.Entry<State,Probability> entry : action.getResultingStates().entrySet()) {
             return entry.getKey();
@@ -147,7 +154,11 @@ public class Model {
             }
         }
 
-        return ((double) numberOfCorrectActions / (double)totalActions) * 100.0;
+        double percent = (double) numberOfCorrectActions / (double)totalActions;
+
+        currentConvergencePercent.setValue(percent);
+
+        return (percent * 100.0);
     }
 
     // Returns null if no actions on state, or if all actions are 0.

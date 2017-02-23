@@ -26,6 +26,10 @@ public class QLearningController extends Controller{
         return instance;
     }
 
+    public void setDiscountVariable(double val) {
+        decayValue = val;
+    }
+
     // Code for fast integer powers from: http://stackoverflow.com/questions/8071363/calculating-powers-in-java
     // By user Qx__
     private long intPow(long a, int b) {
@@ -63,7 +67,7 @@ public class QLearningController extends Controller{
             if (act.getValue() > max) {
                 max = act.getValue();
             }
-            kPowerActionValues[i] = (Math.pow(explorationValue, (act.getValue())));
+            kPowerActionValues[i] = (Math.pow(explorationValue.getValue().doubleValue(), (act.getValue())));
         }
 
         if (max == 0) {

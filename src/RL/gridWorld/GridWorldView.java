@@ -8,6 +8,7 @@ import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -27,7 +28,6 @@ public class GridWorldView extends View{
     TextField setSimRateField;
 
     private GraphicsContext graphicsCont;
-    private InfiniteCanvas infiniteCanvas;
 
     private int gridCellSize = 80;
     private int arrowSize = 12;
@@ -91,18 +91,16 @@ public class GridWorldView extends View{
         setCanvasSize(canvas);
         graphicsCont = canvas.getGraphicsContext2D();
 
-        infiniteCanvas = new InfiniteCanvas(30000,30000, canvas);
-
-        //ScrollPane scroll = new ScrollPane(canvas);
-        //scroll.setPannable(true);
-        //scroll.setMaxHeight(Screen.getMainScreen().getHeight());
-        //scroll.setMaxWidth(Screen.getMainScreen().getWidth());
+        ScrollPane scroll = new ScrollPane(canvas);
+        scroll.setPannable(true);
+        scroll.setMaxHeight(com.sun.glass.ui.Screen.getMainScreen().getHeight() / 1.5);
+        scroll.setMaxWidth(com.sun.glass.ui.Screen.getMainScreen().getWidth() / 1.5);
 
         editVariables.getChildren().addAll(setSimRateText, setSimRateField, setSimRateButton);
 
         underCanvas.getChildren().addAll(editVariables, statusText, this.simViewPanel, simViewPanel2, showValueIterationView, currentConvergence);
 
-        root.getChildren().addAll(infiniteCanvas.getScrollView(), underCanvas);
+        root.getChildren().addAll(scroll, underCanvas);
 
         underCanvas.setAlignment(Pos.TOP_CENTER);
         statusText.setAlignment(Pos.TOP_CENTER);
@@ -413,6 +411,7 @@ public class GridWorldView extends View{
     private void drawState(GridWorldState state, GraphicsContext gc, boolean drawReward) {
         Color col = state.getStateColor();
         gc.strokeRect((state.getStateIdentity().x) * gridCellSize, (state.getStateIdentity().y) * gridCellSize, gridCellSize, gridCellSize);
+        //infiniteCanvas.drawRect((state.getStateIdentity().x) * gridCellSize, (state.getStateIdentity().y) * gridCellSize, gridCellSize, gridCellSize);
         if (col != null) {
             gc.setFill(state.getStateColor());
             gc.fillRect((state.getStateIdentity().x) * gridCellSize + 2, (state.getStateIdentity().y) * gridCellSize + 2, gridCellSize - 4, gridCellSize - 4);

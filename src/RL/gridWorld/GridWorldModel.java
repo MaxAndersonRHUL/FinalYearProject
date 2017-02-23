@@ -11,11 +11,22 @@ public class GridWorldModel extends Model {
 
     static GridWorldModel instance;
 
+    private boolean isEpisodic = false;
+
     public static GridWorldModel getInstance() {
         if(instance == null) {
             instance = new GridWorldModel();
         }
         return instance;
+    }
+
+    @Override
+    public void stateChanged() {
+        if (isEpisodic) {
+            if (getAgent().currentState.getReward() != 0) {
+                getAgent().currentState = startingState;
+            }
+        }
     }
 
     public void setupEmptyGrid() {
@@ -28,6 +39,10 @@ public class GridWorldModel extends Model {
     public void setupFullGrid() {
         setupEmptyGrid();
         fillActions();
+    }
+
+    public void setEpisodic(boolean episodic) {
+        isEpisodic = episodic;
     }
 
     @Override

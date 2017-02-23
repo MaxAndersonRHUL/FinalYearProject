@@ -30,6 +30,12 @@ public class ValueIterationController {
 
     double learningValue = 0.9f;
 
+    private boolean complete = false;
+
+    public boolean isComplete() {
+        return complete;
+    }
+
     private ValueIterationController() {
         instance = this;
     }
@@ -116,6 +122,7 @@ public class ValueIterationController {
             List<Action> nState = getLargestActionByValueFromState(state);
             actionsChosen.put(state.getStateIdentity(), nState);
         }
+        complete = true;
     }
 
     public void beginCalculatingValueIteration() {
