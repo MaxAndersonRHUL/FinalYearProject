@@ -38,6 +38,10 @@ public class ExperimentationController {
     }
     */
 
+    public static void setIterationsPerSave(int num) {
+        iterationsPerSave = num;
+    }
+
     public static void registerExperimentableValue(ExperimentableValue newValue) {
         exprValues.put(newValue, new ArrayList<>());
         observableValues.add(newValue);
@@ -64,6 +68,7 @@ public class ExperimentationController {
         currentIterCounter = 0;
         for (Map.Entry<ExperimentableValue, ArrayList<VariableRecord>> entry : exprValues.entrySet()) {
             entry.getValue().add(new VariableRecord(entry.getKey().getValue(), CurrentSimulationReference.controller.getTotalIterations()));
+            entry.getKey().setAmountOfRecords(entry.getValue().size());
         }
         GraphView.dataAdded();
     }

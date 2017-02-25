@@ -1,11 +1,12 @@
 package RL;
 
+import java.io.Serializable;
 import java.util.HashMap;
 
 /**
  * Created by max on 16/10/2016.
  */
-public class Action {
+public class Action implements Serializable{
 
     public HashMap<State, Probability> resultingStates = new HashMap<>();
     protected double value = 0;

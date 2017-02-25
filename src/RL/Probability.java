@@ -1,11 +1,12 @@
 package RL;
 
+import java.io.Serializable;
 import java.util.InputMismatchException;
 
 /**
  * Created by max on 26/12/2016.
  */
-public class Probability {
+public class Probability implements Serializable{
     double probab;
 
     public Probability(double probability) {

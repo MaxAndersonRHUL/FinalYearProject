@@ -1,5 +1,6 @@
 package RL;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.HashMap;
@@ -10,7 +11,7 @@ import java.util.Random;
 /**
  * Created by max on 04/12/2016.
  */
-public class Model {
+public class Model implements Serializable{
 
     protected HashMap<StateIdentity, State> states;
 
@@ -25,7 +26,8 @@ public class Model {
 
     int convergenceCheckPrecision = 2;
 
-    ExperimentableValue currentConvergencePercent = new ExperimentableValue(0.0, "Policy Accuracy (%)");
+    transient ExperimentableValue currentConvergencePercent = new ExperimentableValue(0.0, "Policy Accuracy (%)");
+    transient ExperimentableValue averageRewardPer100Actions = new ExperimentableValue(0.0, "Average Reward per 100 actions");
 
     public Model() {
         instance = this;
@@ -50,8 +52,11 @@ public class Model {
         addState(state, state.getStateIdentity());
     }
 
+    // Called by the controller at the end of every action choice and execution.
     public void stateChanged() {
+        if(mainAgent.currentState.getReward() != 0) {
 
+        }
     }
 
     public void setStartingState(State state) {

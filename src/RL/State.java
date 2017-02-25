@@ -1,5 +1,6 @@
 package RL;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -7,7 +8,7 @@ import java.util.List;
 /**
  * Created by max on 16/10/2016.
  */
-public abstract class State {
+public abstract class State implements Serializable{
 
     protected List<Action> actions;
     public double reward = 0;

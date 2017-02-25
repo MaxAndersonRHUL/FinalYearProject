@@ -9,7 +9,7 @@ import javafx.scene.paint.Color;
  */
 public class GridWorldState extends State {
 
-    private Color stateColor = null;
+    transient private Color stateColor = null;
     private GridWorldCoordinate identity;
 
     public GridWorldState(GridWorldCoordinate location) {

@@ -1,11 +1,12 @@
 package RL;
 
+import java.io.Serializable;
 import java.util.LinkedList;
 
 /**
  * Created by max on 16/10/2016.
  */
-public class Agent {
+public class Agent implements Serializable{
 
     public State currentState;
     protected LinkedList<Action> actionsTaken;

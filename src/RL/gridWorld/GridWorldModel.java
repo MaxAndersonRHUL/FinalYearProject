@@ -22,6 +22,7 @@ public class GridWorldModel extends Model {
 
     @Override
     public void stateChanged() {
+        super.stateChanged();
         if (isEpisodic) {
             if (getAgent().currentState.getReward() != 0) {
                 getAgent().currentState = startingState;

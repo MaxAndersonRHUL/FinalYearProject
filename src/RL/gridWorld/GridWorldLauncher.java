@@ -15,6 +15,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
@@ -40,18 +41,25 @@ public class GridWorldLauncher extends Application {
     private static TextField initQValueMinField;
     private static TextField initQValueMaxField;
     private static TextField exprWaitTimeField;
+    private static TextField loadFileNameField;
 
     private static Slider discountSlider;
 
     private static CheckBox enableEpisodicMode;
 
+    private static Text loadFileStatusText;
+    private static Text generalMessageText;
+
     public static Stage primaryStage;
+
+    public static boolean preLoadedEnvironment = false;
 
     public static void main(String[] args) {
         launch(args);
     }
 
     public Node setupGridWorldTab() {
+        preLoadedEnvironment = false;
         VBox root = new VBox(10);
         Text titleText = new Text("Grid World");
         titleText.setFont(new Font(18));
@@ -136,9 +144,9 @@ public class GridWorldLauncher extends Application {
         initQValueMinField.setPrefColumnCount(2);
 
         HBox exprValueUpdateTime = new HBox(10);
-        Text exprValueUpdateTimeText = new Text("Variable Record Wait (milliseconds):");
+        Text exprValueUpdateTimeText = new Text("Iterations per variable record:");
         exprValueUpdateTimeText.setFont(stdFont);
-        exprWaitTimeField = new TextField("500");
+        exprWaitTimeField = new TextField("5");
         exprWaitTimeField.setPrefColumnCount(3);
 
         Text discountSliderText = new Text("Discount Variable");
@@ -171,6 +179,9 @@ public class GridWorldLauncher extends Application {
         Text yCoord = new Text("Y:");
         yCoord.setFont(stdFont);
 
+        generalMessageText = new Text("");
+        generalMessageText.setFont(stdFont);
+
         rewardAmountField = new TextField("5");
         Text rewardAmountText = new Text("Amount:");
         rewardAmountText.setFont(stdFont);
@@ -184,6 +195,15 @@ public class GridWorldLauncher extends Application {
         startAgentStateYField = new TextField("1");
         Text startYCoord = new Text("Y:");
         startYCoord.setFont(stdFont);
+
+        HBox loadExistingEnv = new HBox(10);
+        Text loadExistingEnvText = new Text("Load Environment: ");
+        loadFileNameField = new TextField("default");
+        Button loadFileButton = new Button("Load");
+        loadFileButton.setOnAction(new loadEnvironmentFromFileButtonHandler());
+        loadFileStatusText = new Text("");
+        loadFileStatusText.setFont(stdFont);
+        loadFileStatusText.setFill(Color.BLUE);
 
         enableEpisodicMode = new CheckBox("Episodic");
         enableEpisodicMode.setFont(stdFont);
@@ -212,6 +232,7 @@ public class GridWorldLauncher extends Application {
         learningIterationSpeed.getChildren().addAll(learningIterationSpeedText, learningIterationSpeedField);
         rewardCoordinate.getChildren().addAll(rewardCoordinateText, xCoord, startRewardLocationXField, yCoord, startRewardLocationYField, rewardAmountText, rewardAmountField);
         startState.getChildren().addAll(startStateText, startXCoord, startAgentStateXField, startYCoord, startAgentStateYField);
+        loadExistingEnv.getChildren().addAll(loadExistingEnvText, loadFileNameField, loadFileButton);
         endButtons.getChildren().addAll(startButton, creatorButton);
 
         graphicsVars.getChildren().addAll(gridCellSize, gridArrowSize, gridFontSize);
@@ -220,7 +241,7 @@ public class GridWorldLauncher extends Application {
 
         scrollPanels.getChildren().addAll(graphicalElements, simulationElements, experimentElements);
 
-        root.getChildren().addAll(titleText, scrollPanels,  endButtons);
+        root.getChildren().addAll(titleText, generalMessageText, scrollPanels, loadExistingEnv, loadFileStatusText, endButtons);
         root.setPadding(new Insets(10, 10, 10, 10));
 
         root.setAlignment(Pos.TOP_CENTER);
@@ -239,6 +260,7 @@ public class GridWorldLauncher extends Application {
         experimentTypes.setAlignment(Pos.TOP_CENTER);
         initialQValues.setAlignment(Pos.TOP_CENTER);
         exprValueUpdateTime.setAlignment(Pos.TOP_CENTER);
+        loadExistingEnv.setAlignment(Pos.TOP_CENTER);
 
         GraphView.start();
 
@@ -282,21 +304,58 @@ public class GridWorldLauncher extends Application {
         primaryStage.show();
     }
 
-    public static void setupGridViewFromVariables() {
+    public static void loadExistingGridWorld() {
+        String fileName = GridWorldLauncher.loadFileNameField.getText();
+        loadExistingGridWorld(fileName);
+    }
+
+    public static void loadExistingGridWorld(String fileName){
+        if(GridWorldSaveControl.loadEnvironmentFromFile(fileName)) {
+            loadFileStatusText.setFill(Color.BLUE);
+            loadFileStatusText.setText("Loaded environment: " + fileName);
+
+            changeToPreLoadedEnvironmentUI();
+            preLoadedEnvironment = true;
+
+        } else {
+            loadFileStatusText.setFill(Color.RED);
+            loadFileStatusText.setText("Error loading file");
+        }
+
+    }
+
+    public static void changeToPreLoadedEnvironmentUI() {
+        gridSizeXField.setDisable(true);
+        gridSizeYField.setDisable(true);
+        startRewardLocationXField.setDisable(true);
+        startRewardLocationYField.setDisable(true);
+        //startAgentStateXField.setDisable(true);
+        //startAgentStateYField.setDisable(true);
+        rewardAmountField.setDisable(true);
+
+        gridSizeXField.setText("" + GridWorldModel.getInstance().getGridSizeX());
+        gridSizeYField.setText("" + GridWorldModel.getInstance().getGridSizeY());
+    }
+
+    public static void setupGridModelFromVariables() {
         GridWorldModel model = GridWorldModel.getInstance();
-        GridWorldView view = GridWorldView.getInstance();
 
         model.setGridSizeX(Integer.parseInt(GridWorldLauncher.gridSizeXField.getCharacters().toString()));
         model.setGridSizeY(Integer.parseInt(GridWorldLauncher.gridSizeYField.getCharacters().toString()));
 
+    }
+
+    public static void setupGridViewFromVariables() {
+        GridWorldView view = GridWorldView.getInstance();
+
         view.setGridCellSize(Integer.parseInt(GridWorldLauncher.gridCellSizeField.getCharacters().toString()));
         view.setArrowSize(Integer.parseInt(GridWorldLauncher.gridArrowSizeField.getCharacters().toString()));
         view.setTextSize(Integer.parseInt(GridWorldLauncher.gridFontSizeField.getCharacters().toString()));
-
     }
 
     public static void displayError(String errorText) {
-        return;
+        generalMessageText.setFill(Color.RED);
+        generalMessageText.setText(errorText);
     }
 
     public static void setupInitialRewardStateFromField() {
@@ -313,6 +372,9 @@ public class GridWorldLauncher extends Application {
     }
 
     public static void setupExperiments() {
+
+        ExperimentationController.setIterationsPerSave(Integer.parseInt(exprWaitTimeField.getText()));
+
         double minQ = Double.parseDouble(initQValueMinField.getText());
         double maxQ = Double.parseDouble(initQValueMaxField.getText());
 
@@ -332,9 +394,16 @@ public class GridWorldLauncher extends Application {
 
 class creatorButtonHandler implements EventHandler<ActionEvent> {
     public void handle(ActionEvent event) {
+        GridWorldLauncher.setupGridModelFromVariables();
         GridWorldLauncher.setupGridViewFromVariables();
         GridWorldModel.getInstance().setupEmptyGrid();
         GridWorldCreator.getInstance().start(GridWorldLauncher.primaryStage);
+    }
+}
+
+class loadEnvironmentFromFileButtonHandler implements EventHandler<ActionEvent> {
+    public void handle(ActionEvent event) {
+        GridWorldLauncher.loadExistingGridWorld();
     }
 }
 
@@ -359,17 +428,22 @@ class startXOGridWorldNoLearning implements EventHandler<ActionEvent> {
 class startGridWorldQLearningButtonHandler implements EventHandler<ActionEvent> {
     //When the start button is clicked on the main menu.
     public void handle(ActionEvent event) {
+        if(!GridWorldLauncher.preLoadedEnvironment) {
+            GridWorldLauncher.setupGridModelFromVariables();
+            GridWorldModel.getInstance().setupFullGrid();
+            GridWorldLauncher.setupInitialRewardStateFromField();
+        } else {
+
+        }
 
         GridWorldLauncher.setupGridViewFromVariables();
 
         CurrentSimulationReference.model = GridWorldModel.getInstance();
-        GridWorldModel.getInstance().setupFullGrid();
-
-        GridWorldLauncher.setupInitialRewardStateFromField();
 
         CurrentSimulationReference.view = GridWorldView.getInstance();
 
         GridWorldLauncher.setupModelFromVariables();
+
         GridWorldLauncher.setupExperiments();
 
         GridWorldView.getInstance().setupView(GridWorldLauncher.primaryStage);
