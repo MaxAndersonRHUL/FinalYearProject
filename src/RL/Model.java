@@ -27,7 +27,6 @@ public class Model implements Serializable{
     int convergenceCheckPrecision = 2;
 
     transient ExperimentableValue currentConvergencePercent = new ExperimentableValue(0.0, "Policy Accuracy (%)");
-    transient ExperimentableValue averageRewardPer100Actions = new ExperimentableValue(0.0, "Average Reward per 100 actions");
 
     public Model() {
         instance = this;
@@ -54,9 +53,7 @@ public class Model implements Serializable{
 
     // Called by the controller at the end of every action choice and execution.
     public void stateChanged() {
-        if(mainAgent.currentState.getReward() != 0) {
 
-        }
     }
 
     public void setStartingState(State state) {

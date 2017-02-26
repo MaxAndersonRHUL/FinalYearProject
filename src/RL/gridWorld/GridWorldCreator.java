@@ -5,6 +5,7 @@ import RL.GridWorldSaveControl;
 import RL.State;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
@@ -79,6 +80,14 @@ public class GridWorldCreator {
             }
         });
 
+        Button returnToMenuButton = new Button("Main Menu");
+        returnToMenuButton.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                returnToMainMenu();
+            }
+        });
+
         canvas = new Canvas();
 
         gridView.setCanvasSize(canvas);
@@ -86,11 +95,14 @@ public class GridWorldCreator {
         graphics = canvas.getGraphicsContext2D();
 
         saveWorld.getChildren().addAll(saveFileName, saveButton);
-        underCanvas.getChildren().addAll(saveWorld, fillGridButton);
+        underCanvas.getChildren().addAll(saveWorld, fillGridButton, returnToMenuButton);
         root.getChildren().addAll(canvas, underCanvas);
 
         underCanvas.setAlignment(Pos.TOP_CENTER);
         root.setAlignment(Pos.TOP_CENTER);
+        saveWorld.setAlignment(Pos.TOP_CENTER);
+
+        root.setPadding(new Insets(10,10,10,10));
 
         gridView.fullRedraw(canvas);
 
@@ -99,9 +111,9 @@ public class GridWorldCreator {
         creatorStage.setTitle("Grid World Creator");
         creatorStage.setScene(scene);
         creatorStage.show();
-
-
         scene.setOnKeyPressed(new EventHandler<KeyEvent>() {
+
+
             @Override
             public void handle(KeyEvent event) {
                 keyPressed(event.getCode());
@@ -128,7 +140,7 @@ public class GridWorldCreator {
                 if(currentlyTyping != null) {
                     double dub = Double.parseDouble(currentlyTyping);
                     currentlySelected.setReward(dub);
-                    currentlyTyping = null;
+                    currentlyTyping = "";
                     gridView.fullRedraw(canvas);
                 }
             }
@@ -138,7 +150,7 @@ public class GridWorldCreator {
     private void deselectCurrent() {
         currentlySelected.setStateColor(defColor);
         currentlySelected = null;
-        currentlyTyping = null;
+        currentlyTyping = "";
     }
 
     private void setCurrentlySelected(GridWorldState state) {
@@ -165,6 +177,8 @@ public class GridWorldCreator {
         double y = event.getY();
         //GridWorldState selected = GridWorldModel.getInstance().getStates()[(int) (y / gridView.getGridCellSize())] [(int) (x / gridView.getGridCellSize())];
         GridWorldState selected = (GridWorldState) GridWorldModel.getInstance().getStates().get(new GridWorldCoordinate((int) (x / gridView.getGridCellSize()) , (int) (y / gridView.getGridCellSize())));
+
+        canvas.requestFocus();
 
         if(event.getButton() == MouseButton.SECONDARY) {
             if(currentlySelected == null) {
@@ -211,6 +225,11 @@ public class GridWorldCreator {
         } else {
             showError("Unable to save the environment!");
         }
+    }
+
+    public static void returnToMainMenu() {
+        GridWorldCreator.closeCreatorView();
+        GridWorldLauncher.primaryStage.show();
     }
 }
 

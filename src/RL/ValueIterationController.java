@@ -75,14 +75,26 @@ public class ValueIterationController {
     }
 
     private double getLargestValueFromState(State state) {
-        return stateValues.get(getLargestActionByValueFromState(state).get(0).getMostProbableState().getStateIdentity());
+        List<Action> largestValues = getLargestActionByValueFromState(state);
+        if(largestValues.size() == 0) {
+            return state.getReward();
+        }
+        return stateValues.get(largestValues.get(0).getMostProbableState().getStateIdentity());
     }
 
     private List<Action> getLargestActionByValueFromState(State state) {
         List<Action> highestActions = new ArrayList<Action>();
         double highestVal = -1;
         for(Action action : state.getActions()) {
-            double resultStateValue = stateValues.get(action.getMostProbableState().getStateIdentity());
+            StateIdentity ident = action.getMostProbableState().getStateIdentity();
+
+            double resultStateValue;
+            if(!stateValues.containsKey(ident)) {
+                continue;
+            } else {
+                resultStateValue = stateValues.get(ident);
+            }
+
             if(resultStateValue > highestVal) {
                 highestActions.clear();
                 highestActions.add(action);

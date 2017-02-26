@@ -122,8 +122,8 @@ public abstract class Controller {
                         if(!executionPaused) {
                             totalIterations++;
                             stepSimulation();
-                            CurrentSimulationReference.model.stateChanged();
                             ExperimentationController.iterationOccurred();
+                            CurrentSimulationReference.model.stateChanged();
                         }
                     }
                 }

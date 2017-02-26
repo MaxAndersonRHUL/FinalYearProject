@@ -53,8 +53,6 @@ public class GraphView {
         tableView = new TableView<ExperimentableValue>();
         tableView.setItems(ExperimentationController.getObservableValues());
 
-
-
         TableColumn<ExperimentableValue,Number> valCol = new TableColumn<ExperimentableValue,Number>("Value");
 
         valCol.setCellValueFactory(
@@ -200,8 +198,7 @@ public class GraphView {
                     yAxis.setLabel(exprVal.getName());
                     xAxis.setLabel("Iterations");
                     series.getData().addAll(list);
-                    lineChart.getData().clear();
-                    lineChart.getData().add(series);
+                    lineChart.getData().setAll(series);
                 }
             });
 
@@ -240,8 +237,9 @@ public class GraphView {
                 @Override
                 public void run() {
                     series.getData().addAll(dataList);
-                    lineChart.getData().clear();
-                    lineChart.getData().add(series);
+                    //lineChart.getData().clear();
+                    lineChart.getData().setAll(series);
+                    //lineChart.getData().add(series);
                 }
             });
 

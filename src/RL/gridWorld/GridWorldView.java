@@ -259,13 +259,12 @@ public class GridWorldView extends View{
             drawStateTransition(agentDoubleLastDrawnState, true, canvas.getGraphicsContext2D(), true);
             drawAdjacentTransitions(agentDoubleLastDrawnState.getStateIdentity(), canvas);
         }
+        drawAgent();
         drawState(agentLastDrawnState, canvas.getGraphicsContext2D(), true);
         drawStateTransition(agentLastDrawnState, true, canvas.getGraphicsContext2D(), true);
         // Arrows overlap between 2 states. Clearing the state and redrawing it therefore requires
         // adjacent states transitions to also be redrawn.
         drawAdjacentTransitions(agentLastDrawnState.getStateIdentity(), canvas);
-        drawAgent();
-
         if(ValueIterationController.getInstance().actionsChosen != null) {
             currentConvergence.setText("Policy Accuracy: " + decimal2.format(CurrentSimulationReference.model.calculateCurrentConvergancePercent(ValueIterationController.getInstance().actionsChosen)) + "%");
         }
