@@ -1,6 +1,4 @@
-package RL;
-
-import RL.gridWorld.GridWorldModel;
+package RL.gridWorld;
 
 import java.io.*;
 

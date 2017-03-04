@@ -71,9 +71,14 @@ public abstract class State implements Serializable{
     }
 
     // A state asks if it can transition to this state.
-    public boolean addActionToState(State state) {
-        state.addAction(new Action(this, 0));
-        return true;
+    public Action addActionToState(State state) {
+        return addActionToState(state, 1);
+    }
+
+    public Action addActionToState(State state, double probab) {
+        Action act = new Action(this, probab);
+        state.addAction(act);
+        return act;
     }
 
 }

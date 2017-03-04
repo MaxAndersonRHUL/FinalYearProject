@@ -14,6 +14,8 @@ public abstract class Controller {
 
     public boolean executionPaused = false;
 
+    public boolean deterministicEnvironment = true;
+
     private boolean pureRandomMode;
 
     public void stepSimulation() {
@@ -34,7 +36,8 @@ public abstract class Controller {
 
         State result = CurrentSimulationReference.model.decideActionChoiceResult(learningChoice);
         Model.getInstance().mainAgent.doAction(learningChoice);
-        Model.getInstance().mainAgent.currentState = result;
+        Model.getInstance().mainAgent.forceSetCurrentState(result);
+        //Model.getInstance().mainAgent.currentState = result;
 
         updateAgentLearningValues();
     }

@@ -18,6 +18,8 @@ import javafx.stage.Stage;
 import javafx.util.Callback;
 
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -183,7 +185,7 @@ public class GraphView {
             ExperimentableValue exprVal = selectedCells.get(0);
 
 
-            ArrayList<VariableRecord> records = ExperimentationController.getRecordedValuesOfExperementableVar(exprVal);
+            ConcurrentLinkedDeque<VariableRecord> records = ExperimentationController.getRecordedValuesOfExperementableVar(exprVal);
             if(records == null) {
                 return;
             }
@@ -208,8 +210,8 @@ public class GraphView {
             yAxis.setLabel(exprValY.getName());
             xAxis.setLabel(exprValX.getName());
 
-            ArrayList<VariableRecord> recordsY = ExperimentationController.getRecordedValuesOfExperementableVar(exprValY);
-            ArrayList<VariableRecord> recordsX = ExperimentationController.getRecordedValuesOfExperementableVar(exprValX);
+            ConcurrentLinkedDeque<VariableRecord> recordsY = ExperimentationController.getRecordedValuesOfExperementableVar(exprValY);
+            ConcurrentLinkedDeque<VariableRecord> recordsX = ExperimentationController.getRecordedValuesOfExperementableVar(exprValX);
 
             if(recordsX == null || recordsY == null) {
                 return;
@@ -217,19 +219,22 @@ public class GraphView {
 
             ArrayList<XYChart.Data> dataList = new ArrayList<>();
 
-            int x = 0;
-            int y = 0;
-            while(recordsY.size() > y && recordsX.size() > x) {
-                long iterRecordedY = recordsY.get(y).getIterationsRecordedOn();
-                long iterRecordedX = recordsX.get(x).getIterationsRecordedOn();
+            Iterator<VariableRecord> iterX = recordsX.iterator();
+            VariableRecord currentX = iterX.next();
+            Iterator<VariableRecord> iterY = recordsY.iterator();
+            VariableRecord currentY = iterY.next();
+
+            while(iterX.hasNext() && iterY.hasNext()) {
+                long iterRecordedY = currentY.getIterationsRecordedOn();
+                long iterRecordedX = currentX.getIterationsRecordedOn();
                 if(iterRecordedY == iterRecordedX) {
-                    dataList.add(new XYChart.Data(recordsX.get(x).getValue(), recordsY.get(y).getValue()));
-                    x++;
-                    y++;
+                    dataList.add(new XYChart.Data(currentX.getValue(), currentY.getValue()));
+                    currentX = iterX.next();
+                    currentY = iterY.next();
                 } else if(iterRecordedX > iterRecordedY) {
-                    y++;
+                    currentY = iterY.next();
                 } else {
-                    x++;
+                    currentX = iterX.next();
                 }
             }
 

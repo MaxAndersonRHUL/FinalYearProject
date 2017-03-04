@@ -3,10 +3,10 @@ package RL;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.concurrent.ConcurrentLinkedDeque;
 
 /**
  * Created by max on 23/02/2017.
@@ -19,7 +19,7 @@ public class ExperimentationController {
 
     static LinkedList<RewardIterationPoint> listOfRewards = new LinkedList<>();
 
-    private static HashMap<ExperimentableValue, ArrayList<VariableRecord>> exprValues = new HashMap<>();
+    private static HashMap<ExperimentableValue, ConcurrentLinkedDeque<VariableRecord>> exprValues = new HashMap<>();
     private static ObservableList<ExperimentableValue> observableValues = FXCollections.observableArrayList();
 
     private static ExperimentableValue averageRewardPer100Actions = new ExperimentableValue(0.0, "Average Reward per 100 actions");
@@ -50,16 +50,16 @@ public class ExperimentationController {
     }
 
     public static void registerExperimentableValue(ExperimentableValue newValue) {
-        exprValues.put(newValue, new ArrayList<>());
+        exprValues.put(newValue, new ConcurrentLinkedDeque<>());
         observableValues.add(newValue);
     }
 
-    public static HashMap<ExperimentableValue, ArrayList<VariableRecord>> getExperimentableValues() {
+    public static HashMap<ExperimentableValue, ConcurrentLinkedDeque<VariableRecord>> getExperimentableValues() {
         return exprValues;
     }
 
-    public static ArrayList<VariableRecord> getRecordedValuesOfExperementableVar(ExperimentableValue val) {
-        ArrayList<VariableRecord> toReturn = exprValues.get(val);
+    public static ConcurrentLinkedDeque<VariableRecord> getRecordedValuesOfExperementableVar(ExperimentableValue val) {
+        ConcurrentLinkedDeque<VariableRecord> toReturn = exprValues.get(val);
         return toReturn;
     }
 
@@ -114,7 +114,7 @@ public class ExperimentationController {
     }
 
     public static void iterationOccurred() {
-        double reward = CurrentSimulationReference.model.mainAgent.currentState.getReward();
+        double reward = CurrentSimulationReference.model.mainAgent.getCurrentState().getReward();
         if(reward != 0) {
             listOfRewards.add(new RewardIterationPoint(reward, CurrentSimulationReference.controller.getTotalIterations()));
         }
@@ -125,7 +125,7 @@ public class ExperimentationController {
         }
         currentIterCounter = 0;
         calculateCalculableExprValues();
-        for (Map.Entry<ExperimentableValue, ArrayList<VariableRecord>> entry : exprValues.entrySet()) {
+        for (Map.Entry<ExperimentableValue, ConcurrentLinkedDeque<VariableRecord>> entry : exprValues.entrySet()) {
             entry.getValue().add(new VariableRecord(entry.getKey().getValue(), CurrentSimulationReference.controller.getTotalIterations()));
             entry.getKey().setAmountOfRecords(entry.getValue().size());
         }
@@ -134,7 +134,7 @@ public class ExperimentationController {
 
 }
 
-// I want tuples in java
+
 class RewardIterationPoint {
     public double reward;
     public long iteration;

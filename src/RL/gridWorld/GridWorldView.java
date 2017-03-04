@@ -166,7 +166,7 @@ public class GridWorldView extends View{
     }
 
     public void drawAgent(Agent agent, GraphicsContext gc) {
-        GridWorldState state = (GridWorldState) agent.currentState;
+        GridWorldState state = (GridWorldState) agent.getCurrentState();
         gc.setFill(Color.BLACK);
         gc.fillRect(state.getStateIdentity().x * gridCellSize + (gridCellSize * 0.25), state.getStateIdentity().y * gridCellSize + (gridCellSize * 0.25), gridCellSize / 2, gridCellSize / 2);
         agentDoubleLastDrawnState = agentLastDrawnState;

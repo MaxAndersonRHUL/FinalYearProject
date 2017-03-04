@@ -13,16 +13,16 @@ import java.util.Random;
  */
 public class Model implements Serializable{
 
-    protected HashMap<StateIdentity, State> states;
+    public HashMap<StateIdentity, State> states;
 
-    protected int gridSizeX = 10;
-    protected int gridSizeY = 5;
+    public int gridSizeX = 10;
+    public int gridSizeY = 5;
 
-    protected Agent mainAgent;
+    public Agent mainAgent;
 
     private static Model instance;
 
-    protected State startingState;
+    public State startingState;
 
     int convergenceCheckPrecision = 2;
 
@@ -104,7 +104,7 @@ public class Model implements Serializable{
     }
 
     public Action moveAgentRandom() {
-        List<Action> actions = getAgent().currentState.getActiveActions();
+        List<Action> actions = getAgent().getCurrentState().getActiveActions();
 
         if (actions.size() < 1) {
             System.out.println("Agent has no actions to pick randomly!");
@@ -120,6 +120,9 @@ public class Model implements Serializable{
     // to actions that form the optimal policy can be found via the ValueIterationController.
 
     public double calculateCurrentConvergancePercent(HashMap<StateIdentity, List<Action>> actionsChosen) {
+        if(CurrentSimulationReference.controller == null) {
+            return 0.0;
+        }
         int numberOfCorrectActions = 0;
         int totalActions = 0;
         for(State state : states.values()) {

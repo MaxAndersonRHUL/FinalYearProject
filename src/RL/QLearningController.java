@@ -18,7 +18,6 @@ public class QLearningController extends Controller{
         model = CurrentSimulationReference.model;
     }
 
-
     public static QLearningController getInstance() {
         if (instance == null) {
             instance = new QLearningController();
@@ -53,7 +52,11 @@ public class QLearningController extends Controller{
     }
 
     protected Action makeActionChoice() {
-        State cs = model.getAgent().currentState;
+        return determinsticActionChoice();
+    }
+
+    protected Action determinsticActionChoice() {
+        State cs = model.getAgent().getCurrentState();
         List<Action> activeActions = cs.getActiveActions();
         if (activeActions.size() <= 0) {
             System.out.println("############################### THE AGENT CAN TAKE NO ACTIONS! #######################################");
@@ -98,18 +101,51 @@ public class QLearningController extends Controller{
         return null;
     }
 
-    @Override
-    protected void updateAgentLearningValues() {
-        Action highestAct = model.highestValueFromState(model.getAgent().currentState);
+    private void updateLearningValuesDeterminstic() {
+        Action highestAct = model.highestValueFromState(model.getAgent().getCurrentState());
         double highestVal = 0;
         if (highestAct != null) {
             highestVal = highestAct.value;
         }
-        double reward = model.getAgent().currentState.reward;
+        double reward = model.getAgent().getCurrentState().reward;
         Action lastAction = model.getAgent().getLastActionTaken();
         if (lastAction != null) {
             lastAction.value = (decayValue * highestVal) + reward;
         }
+    }
+
+    private void updateLearningValuesStochastic() {
+        Action lastActionTaken = model.getAgent().getLastActionTaken();
+        double learnRate = 1.0 / (1.0 + lastActionTaken.getAmountOfTimesTaken());
+
+        Action highestAct = model.highestValueFromState(model.getAgent().getCurrentState());
+        double highestVal = 0;
+        if (highestAct != null) {
+            highestVal = highestAct.value;
+        }
+        double reward = model.getAgent().getCurrentState().reward;
+        Action lastAction = model.getAgent().getLastActionTaken();
+        double determinsticValue = 0;
+        if (lastAction != null) {
+            determinsticValue = (decayValue * highestVal) + reward;
+        }
+
+        double step1 = (1 - learnRate) * lastActionTaken.getValue();
+        double step2 = learnRate * determinsticValue;
+
+        if(lastAction != null) {
+            lastAction.value = step1 + step2;
+        }
+    }
+
+    @Override
+    protected void updateAgentLearningValues() {
+        if(deterministicEnvironment) {
+            updateLearningValuesDeterminstic();
+        } else {
+            updateLearningValuesStochastic();
+        }
+
     }
 
     /*

@@ -24,8 +24,8 @@ public class GridWorldModel extends Model {
     public void stateChanged() {
         super.stateChanged();
         if (isEpisodic) {
-            if (getAgent().currentState.getReward() != 0) {
-                getAgent().currentState = startingState;
+            if (getAgent().getCurrentState().getReward() != 0) {
+                getAgent().forceSetCurrentState(startingState);
             }
         }
     }
@@ -34,7 +34,7 @@ public class GridWorldModel extends Model {
         fillStates();
         startingState = states.get(new GridWorldCoordinate(0,0));
         mainAgent = new Agent();
-        mainAgent.currentState = startingState;
+        mainAgent.forceSetCurrentState(startingState);
     }
 
     public void setupFullGrid() {
@@ -48,7 +48,11 @@ public class GridWorldModel extends Model {
 
     @Override
     public State decideActionChoiceResult(Action action) {
-        return action.getMostProbableState();
+        if(action.getResultingStates().size() == 1) {
+            return action.getResultingStates().keySet().iterator().next();
+        }
+        State result = Probability.randomChooseStateFromHashMap(action.getResultingStates());
+        return result;
     }
 
     void printAllHashCodes() {
@@ -73,20 +77,30 @@ public class GridWorldModel extends Model {
                 GridWorldCoordinate identity = new GridWorldCoordinate(x, y);
                 State identityState = states.get(identity);
                 if (x > 0) {
-                    states.get(new GridWorldCoordinate(x-1, y)).addActionToState(identityState);
+                    states.get(new GridWorldCoordinate(x-1, y)).addActionToState(identityState, 1);
                 }
                 if (x < gridSizeX - 1) {
-                    states.get(new GridWorldCoordinate(x+1, y)
-                    ).addActionToState(identityState);
+                    states.get(new GridWorldCoordinate(x+1, y)).addActionToState(identityState, 1);
                 }
                 if (y < gridSizeY - 1) {
-                    states.get(new GridWorldCoordinate(x, y+1)).addActionToState(identityState);
+                    states.get(new GridWorldCoordinate(x, y+1)).addActionToState(identityState, 1);
                 }
                 if (y > 0) {
-                    states.get(new GridWorldCoordinate(x, y-1)).addActionToState(identityState);
+                    states.get(new GridWorldCoordinate(x, y-1)).addActionToState(identityState, 1);
                 }
+
             }
         }
+        // Setting up custom rules for non-deterministic environments.
+        /*
+        for(Action act : states.get(new GridWorldCoordinate(2,2)).getActions()) {
+            for(Map.Entry<State, Probability> entry : act.getResultingStates().entrySet()) {
+                entry.getValue().setProbability(0.6);
+            }
+            act.addResultingState(states.get(new GridWorldCoordinate(6,4)), 0.4);
+        }
+        */
+
     }
 
     protected boolean canStateTransitionTo(GridWorldState state1, GridWorldState state2) {

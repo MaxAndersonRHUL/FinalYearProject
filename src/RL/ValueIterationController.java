@@ -24,7 +24,7 @@ public class ValueIterationController {
     // How many decimal places the controller considers when deciding if a value has changed or not.
     // A high number of decimal places result in many iterations that cause no change in the policy towards
     // the end of the calculation.
-    private int iterationFinishedPrecisionPlaces = 3;
+    private int iterationFinishedPrecisionPlaces = 5;
 
     private static ValueIterationController instance;
 
@@ -58,14 +58,104 @@ public class ValueIterationController {
         return instance;
     }
 
+    private boolean stochasticIterateValues() {
+        boolean valueChanged = false;
+        for(Map.Entry<StateIdentity, State> keyVal : states.entrySet()) {
+            if(keyVal.getValue().actions.size() == 0) {
+                continue;
+            }
+
+            double stateValue = calculateStochasticValueOfState(keyVal.getValue());
+
+            if(round(stateValue) != round(stateValues.get(keyVal.getKey()))) {
+                stateValues.replace(keyVal.getKey(), stateValue);
+                valueChanged = true;
+            }
+        }
+        return valueChanged;
+    }
+
+    private double calculateStochasticValueOfState(State state) {
+        double currentMax = -1;
+
+        if(state.getReward() > 0) {
+            return state.getReward();
+        }
+
+        for(Action action : state.getActions()) {
+            double totalEstValueForAllPossibleActions = 0.0;
+            for(Map.Entry<State, Probability> possibleResult : action.getResultingStates().entrySet()) {
+                double calc = learningValue * stateValues.get(possibleResult.getKey().getStateIdentity());
+                totalEstValueForAllPossibleActions += possibleResult.getValue().probab * (calc);
+            }
+
+            if(totalEstValueForAllPossibleActions > currentMax) {
+                currentMax = totalEstValueForAllPossibleActions;
+            }
+        }
+        return currentMax;
+    }
+
+    /*
+    private List<Action> stochasticMaxActionsOfState(State state) {
+        double currentMax = -1;
+        List<Action> highestActions = new ArrayList<Action>();
+        for(Action action : state.getActions()) {
+            double totalEstValueForAllPossibleActions = 0.0;
+            for(Map.Entry<State, Probability> possibleResult : action.getResultingStates().entrySet()) {
+                double calc = learningValue * stateValues.get(possibleResult.getKey().getStateIdentity());
+                totalEstValueForAllPossibleActions += possibleResult.getValue().probab * (possibleResult.getKey().getReward() * calc);
+            }
+            if(totalEstValueForAllPossibleActions > currentMax) {
+                highestActions.clear();
+                highestActions.add(action);
+                currentMax = totalEstValueForAllPossibleActions;
+            } else if(totalEstValueForAllPossibleActions == currentMax) {
+                highestActions.add(action);
+            }
+        }
+        return highestActions;
+    }
+
+    private List<Action> stochasticGetLargestActioByValueFromState(State state) {
+        List<Action> highestActions = new ArrayList<Action>();
+        double highestVal = -1;
+        for(Action action : state.getActions()) {
+            StateIdentity ident = action.getMostProbableState().getStateIdentity();
+
+            double resultStateValue;
+            if(!stateValues.containsKey(ident)) {
+                continue;
+            } else {
+                resultStateValue = stateValues.get(ident);
+            }
+
+            if(resultStateValue > highestVal) {
+                highestActions.clear();
+                highestActions.add(action);
+                highestVal = resultStateValue;
+            } else if(resultStateValue == highestVal) {
+                highestActions.add(action);
+            }
+        }
+        return highestActions;
+    }
+    */
+
     private boolean iterateValues() {
         boolean valueChanged = false;
         for(Map.Entry<StateIdentity, State> keyVal : states.entrySet()) {
             if(keyVal.getValue().actions.size() == 0) {
                 continue;
             }
+            double newVal = 0;
             double highestVal = getLargestValueFromState(keyVal.getValue());
-            double newVal = (highestVal * learningValue) + keyVal.getValue().getReward();
+            if(keyVal.getValue().getReward() != 0) {
+                newVal = keyVal.getValue().getReward();
+            } else {
+                newVal = (highestVal * learningValue);
+            }
+
             if(round(newVal) != round(stateValues.get(keyVal.getKey()))) {
                 stateValues.replace(keyVal.getKey(), newVal);
                 valueChanged = true;
@@ -129,7 +219,15 @@ public class ValueIterationController {
         states = new HashMap<>(CurrentSimulationReference.model.getStates());
     }
 
-    private void finishedCalculating() {
+    private void finishedCalculatingDeterminstic() {
+        for(State state : states.values()) {
+            List<Action> nState = getLargestActionByValueFromState(state);
+            actionsChosen.put(state.getStateIdentity(), nState);
+        }
+        complete = true;
+    }
+
+    private void finishedCalculatingStochastic() {
         for(State state : states.values()) {
             List<Action> nState = getLargestActionByValueFromState(state);
             actionsChosen.put(state.getStateIdentity(), nState);
@@ -144,12 +242,21 @@ public class ValueIterationController {
 
         new Thread() {
             public void run() {
-                while (true) {
-                    if(iterateValues() == false){
-                        finishedCalculating();
-                        break;
+                while (!complete) {
+                    if(CurrentSimulationReference.controller == null) {
+                        continue;
+                    }
+                    if(CurrentSimulationReference.controller.deterministicEnvironment) {
+                        if(iterateValues() == false) {
+                            finishedCalculatingDeterminstic();
+                        }
+                    } else {
+                        if(stochasticIterateValues() == false) {
+                            finishedCalculatingStochastic();
+                        }
                     }
                     currentIterations++;
+
                     /*
                     try {
                         Thread.sleep(100);

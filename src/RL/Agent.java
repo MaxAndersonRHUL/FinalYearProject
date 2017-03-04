@@ -8,7 +8,7 @@ import java.util.LinkedList;
  */
 public class Agent implements Serializable{
 
-    public State currentState;
+    private State currentState;
     protected LinkedList<Action> actionsTaken;
 
     private final int MAX_ACTIONS_HISTORY = 100;
@@ -20,12 +20,22 @@ public class Agent implements Serializable{
 
     public void doAction(Action act) {
         if (!currentState.getActions().contains((act))) {
-            System.out.println("The agent attempted to move to a state it isn't able to!");
+            System.out.println("The agent attempted to take an action it does not have!");
             return;
         }
         //System.out.println("Agent is moving from state: \n" + currentState);
         //System.out.println("To state: \n" + act.resultingState);
+        act.incrTimesTaken();
         addActionToRecord(act);
+    }
+
+    public State getCurrentState() {
+        return currentState;
+    }
+
+    // Bypasses all probabilities and literally sets the current state of the agent.
+    public void forceSetCurrentState(State state) {
+        currentState = state;
     }
 
     // Due to memory issues when iterating thousands of actions per second,

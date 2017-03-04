@@ -72,7 +72,7 @@ public class XOView extends View {
     @Override
     public void redraw() {
         clearCanvas(gc, canvas);
-        drawBoard((XOState) (XOModel.getInstance().getAgent().currentState));
+        drawBoard((XOState) (XOModel.getInstance().getAgent().getCurrentState()));
     }
 
     public LocationState[][] cloneArray(LocationState[][] initial) {

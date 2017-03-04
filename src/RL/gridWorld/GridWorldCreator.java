@@ -1,7 +1,6 @@
 package RL.gridWorld;
 
 import RL.Action;
-import RL.GridWorldSaveControl;
 import RL.State;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;

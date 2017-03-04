@@ -189,10 +189,10 @@ public class GridWorldLauncher extends Application {
         HBox startState = new HBox(10);
         Text startStateText = new Text("Agent Start Position");
         startStateText.setFont(stdFont);
-        startAgentStateXField = new TextField("1");
+        startAgentStateXField = new TextField("0");
         Text startXCoord = new Text("X:");
         startXCoord.setFont(stdFont);
-        startAgentStateYField = new TextField("1");
+        startAgentStateYField = new TextField("0");
         Text startYCoord = new Text("Y:");
         startYCoord.setFont(stdFont);
 
@@ -364,7 +364,7 @@ public class GridWorldLauncher extends Application {
 
     public static void setupModelFromVariables() {
         State newStartState = GridWorldModel.getInstance().getStates().get(new GridWorldCoordinate(Integer.parseInt(startAgentStateXField.getText()), Integer.parseInt(GridWorldLauncher.startAgentStateYField.getText())));
-        GridWorldModel.getInstance().getAgent().currentState = newStartState;
+        GridWorldModel.getInstance().getAgent().forceSetCurrentState(newStartState);
         GridWorldModel.getInstance().setStartingState(newStartState);
         GridWorldModel.getInstance().setEpisodic(enableEpisodicMode.isSelected());
 

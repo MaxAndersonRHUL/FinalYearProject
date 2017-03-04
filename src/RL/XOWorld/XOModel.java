@@ -48,7 +48,7 @@ public class XOModel extends Model {
 
     private void resetSimulation() {
         opponentStates.clear();
-        mainAgent.currentState = initialState;
+        mainAgent.forceSetCurrentState(initialState);
         previousState = null;
     }
 
@@ -70,11 +70,11 @@ public class XOModel extends Model {
         // Since every possible state that results from this action has the location of the learning algorithms choice, we can pick
         // any action and remove the opponent marker.
 
-        if(mainAgent.currentState.getActions().size() == 1) {
-            return mainAgent.currentState.getActions().get(0).getMostProbableState();
+        if(mainAgent.getCurrentState().getActions().size() == 1) {
+            return mainAgent.getCurrentState().getActions().get(0).getMostProbableState();
         }
 
-        XOBoard prevBoard = (XOBoard) mainAgent.currentState.getStateIdentity();
+        XOBoard prevBoard = (XOBoard) mainAgent.getCurrentState().getStateIdentity();
         XOBoard playerMovedBoard = copyPlayerMarkersToBoard((XOBoard) act.getMostProbableState().getStateIdentity(), prevBoard);
         XOBoard board = randomOpponentMove(playerMovedBoard);
 
@@ -130,7 +130,7 @@ public class XOModel extends Model {
         System.out.println("END #################### \n \n \n");
         */
 
-        if(checkWinCondition((XOBoard) mainAgent.currentState.getStateIdentity(), playerMarker)) {
+        if(checkWinCondition((XOBoard) mainAgent.getCurrentState().getStateIdentity(), playerMarker)) {
             CurrentSimulationReference.view.setStatusText(playerMarker.name() + " WINS!");
             resetSimulation();
             exitFlag = true;
@@ -148,11 +148,11 @@ public class XOModel extends Model {
         }
 
 
-        if(mainAgent.currentState.getActions().size() == 0) {
-            buildNextPossibleStateSet((XOState) mainAgent.currentState);
+        if(mainAgent.getCurrentState().getActions().size() == 0) {
+            buildNextPossibleStateSet((XOState) mainAgent.getCurrentState());
         }
 
-        if(checkWinCondition((XOBoard) mainAgent.currentState.getStateIdentity(), opponentMarker)) {
+        if(checkWinCondition((XOBoard) mainAgent.getCurrentState().getStateIdentity(), opponentMarker)) {
             CurrentSimulationReference.view.setStatusText(opponentMarker.name() + " WINS!");
             resetSimulation();
             exitFlag = true;
@@ -161,7 +161,7 @@ public class XOModel extends Model {
 
         //deactivateActionsNotAllowed();
 
-        previousState = (XOState) mainAgent.currentState;
+        previousState = (XOState) mainAgent.getCurrentState();
 
     }
 
@@ -172,13 +172,13 @@ public class XOModel extends Model {
     }
 
     public void deactivateActionsNotAllowed() {
-        XOBoard board = (XOBoard) (mainAgent.currentState.getStateIdentity());
+        XOBoard board = (XOBoard) (mainAgent.getCurrentState().getStateIdentity());
         for(Point point : opponentStates) {
             LocationState[][] clonedBoard = cloneArray(board.board);
             clonedBoard[point.y][point.x] = playerMarker;
             XOBoard newBoard = new XOBoard(clonedBoard);
 
-            Action action = getStateTransitionTo(mainAgent.currentState, states.get(newBoard));
+            Action action = getStateTransitionTo(mainAgent.getCurrentState(), states.get(newBoard));
 
             if(action != null) {
                 action.setActive(false);
@@ -264,7 +264,7 @@ public class XOModel extends Model {
 
         this.startingState = startState;
         mainAgent = new Agent();
-        mainAgent.currentState = startState;
+        mainAgent.forceSetCurrentState(startState);
     }
 
     public LocationState[][] cloneArray(LocationState[][] initial) {
