@@ -30,7 +30,7 @@ public class ValueIterationController {
 
     double learningValue = 0.9f;
 
-    private boolean complete = false;
+    volatile private boolean complete = false;
 
     public boolean isComplete() {
         return complete;
@@ -142,19 +142,16 @@ public class ValueIterationController {
     }
     */
 
-    private boolean iterateValues() {
+    private boolean deterministicIterateValues() {
         boolean valueChanged = false;
         for(Map.Entry<StateIdentity, State> keyVal : states.entrySet()) {
+
             if(keyVal.getValue().actions.size() == 0) {
                 continue;
             }
             double newVal = 0;
             double highestVal = getLargestValueFromState(keyVal.getValue());
-            if(keyVal.getValue().getReward() != 0) {
-                newVal = keyVal.getValue().getReward();
-            } else {
-                newVal = (highestVal * learningValue);
-            }
+                newVal = (highestVal * learningValue) + keyVal.getValue().getReward();
 
             if(round(newVal) != round(stateValues.get(keyVal.getKey()))) {
                 stateValues.replace(keyVal.getKey(), newVal);
@@ -242,12 +239,12 @@ public class ValueIterationController {
 
         new Thread() {
             public void run() {
-                while (!complete) {
+                while (!isComplete()) {
                     if(CurrentSimulationReference.controller == null) {
                         continue;
                     }
                     if(CurrentSimulationReference.controller.deterministicEnvironment) {
-                        if(iterateValues() == false) {
+                        if(deterministicIterateValues() == false) {
                             finishedCalculatingDeterminstic();
                         }
                     } else {

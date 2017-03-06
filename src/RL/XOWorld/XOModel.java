@@ -4,8 +4,8 @@ import RL.*;
 
 import java.awt.*;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Created by max on 11/12/2016.
@@ -246,7 +246,7 @@ public class XOModel extends Model {
 
     public void setupInitialState() {
 
-        states = new HashMap<StateIdentity, State>();
+        states = new ConcurrentHashMap<StateIdentity, State>();
 
         LocationState[][] startBoard = new LocationState[boardSizeY][boardSizeX];
         for(int y = 0; y < boardSizeY; y++) {

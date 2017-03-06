@@ -54,4 +54,8 @@ public class Agent implements Serializable{
         return actionsTaken.get(actionsTaken.size() - 1);
     }
 
+    public void resetActionsTaken() {
+        actionsTaken.clear();
+    }
+
 }

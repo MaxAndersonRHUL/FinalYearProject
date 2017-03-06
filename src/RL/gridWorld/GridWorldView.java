@@ -19,7 +19,7 @@ import javafx.stage.Stage;
 
 import java.awt.geom.AffineTransform;
 import java.text.DecimalFormat;
-import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class GridWorldView extends View{
 
@@ -244,6 +244,11 @@ public class GridWorldView extends View{
         context.fillPolygon(xPoints, yPoints, 8);
     }
 
+    public void resetDrawState() {
+        agentLastDrawnState = null;
+        agentDoubleLastDrawnState = null;
+    }
+
     public void fullRedraw(Canvas canvas) {
         //clearLastAgentPosition();
         clearCanvas(canvas.getGraphicsContext2D(), canvas);
@@ -253,6 +258,10 @@ public class GridWorldView extends View{
     }
 
     public void minRedraw(Canvas canvas) {
+        if(agentLastDrawnState == null) {
+            fullRedraw();
+            return;
+        }
         clearLastAgentPosition();
         if(agentDoubleLastDrawnState != null) {
             drawState(agentDoubleLastDrawnState, canvas.getGraphicsContext2D(), true);
@@ -260,13 +269,13 @@ public class GridWorldView extends View{
             drawAdjacentTransitions(agentDoubleLastDrawnState.getStateIdentity(), canvas);
         }
         drawAgent();
-        drawState(agentLastDrawnState, canvas.getGraphicsContext2D(), true);
-        drawStateTransition(agentLastDrawnState, true, canvas.getGraphicsContext2D(), true);
-        // Arrows overlap between 2 states. Clearing the state and redrawing it therefore requires
-        // adjacent states transitions to also be redrawn.
-        drawAdjacentTransitions(agentLastDrawnState.getStateIdentity(), canvas);
+            drawState(agentLastDrawnState, canvas.getGraphicsContext2D(), true);
+            drawStateTransition(agentLastDrawnState, true, canvas.getGraphicsContext2D(), true);
+            // Arrows overlap between 2 states. Clearing the state and redrawing it therefore requires
+            // adjacent states transitions to also be redrawn.
+            drawAdjacentTransitions(agentLastDrawnState.getStateIdentity(), canvas);
         if(ValueIterationController.getInstance().actionsChosen != null) {
-            currentConvergence.setText("Policy Accuracy: " + decimal2.format(CurrentSimulationReference.model.calculateCurrentConvergancePercent(ValueIterationController.getInstance().actionsChosen)) + "%");
+            currentConvergence.setText("Policy Accuracy: " + decimal2.format(CurrentSimulationReference.model.calculateCurrentPolicyAccuracyPercent(ValueIterationController.getInstance().actionsChosen)) + "%");
         }
     }
 
@@ -344,7 +353,7 @@ public class GridWorldView extends View{
 
     private void drawStateTransition(GridWorldState state, boolean drawArrows, GraphicsContext gc, boolean drawText) {
         GridWorldModel model = GridWorldModel.getInstance();
-        HashMap<StateIdentity, State> states = model.getStates();
+        ConcurrentHashMap<StateIdentity, State> states = model.getStates();
         if (state.getStateIdentity().x > 0) {
             Action foundAction = model.getStateTransitionTo(state, states.get(new GridWorldCoordinate(state.getStateIdentity().x - 1, state.getStateIdentity().y)));
             if (foundAction != null) {

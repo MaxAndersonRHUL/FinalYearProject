@@ -2,7 +2,6 @@ package RL;
 
 import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * Created by max on 18/10/2016.
@@ -24,7 +23,6 @@ public class QLearningController extends Controller{
         }
         return instance;
     }
-
     public void setDiscountVariable(double val) {
         decayValue = val;
     }
@@ -88,7 +86,23 @@ public class QLearningController extends Controller{
             total = total + value;
         }
 
-        double ran = ThreadLocalRandom.current().nextDouble(0, total);
+        // It is possible that the 'sumValues' variable above is zero, and the subsequent division
+        // in the for loop above will return assign NaN to value. In this case, the summation of the
+        // kPowerActionValues was zero, so the agent can only choose an action arbitrarily.
+        /*
+        if(Double.isNaN(Double.NaN)) {
+            return CurrentSimulationReference.model.moveAgentRandom();
+        }
+
+        double ran = 0;
+
+        try {
+            ran = ThreadLocalRandom.current().nextDouble(0, total);
+        } catch (IllegalArgumentException e) {
+            System.out.println("ARG ERROR: " +total);
+            return null;
+        }
+
 
         double cumulative = 0;
 
@@ -98,7 +112,12 @@ public class QLearningController extends Controller{
                 return activeActions.get(i);
             }
         }
-        return null;
+        */
+
+        int indexChosen = Probability.randomChooseFromDoubleArray(kPowerActionValues);
+        return activeActions.get(indexChosen);
+
+        //return null;
     }
 
     private void updateLearningValuesDeterminstic() {

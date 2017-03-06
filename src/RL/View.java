@@ -41,6 +41,8 @@ public abstract class View {
 
     protected Button pausePlay;
 
+    protected WorldViewUpdater updater;
+
     // The rate that the view is updating, or how frequently the WorldViewUpdater's 'handle' function is called.
     void setFpsText(int currentFPS) {
         fpsText.setText("FPS: " + currentFPS);
@@ -52,6 +54,14 @@ public abstract class View {
 
     void setTotalIterationsText(long totalIterations) {
         totalIterationsText.setText("Amount of iterations " + totalIterations);
+    }
+
+   public void pauseRedrawExecution() {
+        updater.pauseUpdates();
+    }
+
+    public void resumeRedrawExecution() {
+        updater.startUpdates();
     }
 
     public void setupView(Stage stage) {
@@ -122,7 +132,7 @@ public abstract class View {
 
         start(stage);
 
-        WorldViewUpdater updater = new WorldViewUpdater(this, CurrentSimulationReference.controller);
+        updater = new WorldViewUpdater(this, CurrentSimulationReference.controller);
         updater.start();
 
     }

@@ -7,6 +7,8 @@ import java.io.*;
  */
 public class GridWorldSaveControl {
 
+    public static String currentEnvironmentSave;
+
     public static boolean loadEnvironmentFromFile(String nFileName) {
         String directoryName = "GridWorldSaves/";
         String fileName = nFileName;
@@ -34,6 +36,7 @@ public class GridWorldSaveControl {
             return false;
         }
 
+        currentEnvironmentSave = nFileName;
         loadExistingModelWithNewModel(nModel);
         return true;
     }

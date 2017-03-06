@@ -2,7 +2,7 @@ package RL.gridWorld;
 
 import RL.*;
 
-import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Created by max on 17/10/2016.
@@ -62,7 +62,7 @@ public class GridWorldModel extends Model {
     }
 
     public void fillStates() {
-        states = new HashMap<StateIdentity, State>();
+        states = new ConcurrentHashMap<StateIdentity, State>();
         for (int y = 0; y < gridSizeY; y++) {
             for (int x = 0; x < gridSizeX; x++) {
                 GridWorldState state = new GridWorldState(new GridWorldCoordinate(x, y));

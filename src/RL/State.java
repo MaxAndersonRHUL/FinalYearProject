@@ -81,4 +81,13 @@ public abstract class State implements Serializable{
         return act;
     }
 
+
+    @Override
+    public boolean equals(Object obj) {
+        if(obj instanceof State) {
+            return ((State) obj).getStateIdentity().equals(getStateIdentity());
+        }
+        return obj.hashCode() == hashCode();
+    }
+
 }

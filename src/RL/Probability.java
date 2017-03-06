@@ -23,21 +23,23 @@ public class Probability implements Serializable{
         }
     }
 
-    public static double randomChooseFromDoubleList(Collection<Double> probabilities) {
+    public static int randomChooseFromDoubleArray(Double[] probabilities) {
         double total = 0;
-        ArrayList<Double> tempStorage = new ArrayList<Double>();
-        for(double dub : probabilities) {
+        for(Double dub : probabilities) {
             total = total + dub;
-            tempStorage.add(dub);
         }
 
         double random = ThreadLocalRandom.current().nextDouble(0.0, total);
 
         double cumulativeTotal = 0.0;
-        for(double dub : probabilities) {
-            if(dub + cumulativeTotal <= random) {
-                return dub;
+
+        int randIndex = 0;
+        for(Double dub : probabilities) {
+            if(random <= dub+ cumulativeTotal) {
+                return randIndex;
             }
+            randIndex++;
+            cumulativeTotal = cumulativeTotal +  dub;
         }
         return -1;
     }

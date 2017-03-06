@@ -33,6 +33,7 @@ public class ValueIterationGridView extends View {
 
     public void showView() {
         primaryStage.show();
+        redraw();
     }
 
 

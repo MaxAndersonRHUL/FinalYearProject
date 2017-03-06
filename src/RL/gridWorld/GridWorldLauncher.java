@@ -13,8 +13,7 @@ import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
@@ -42,10 +41,13 @@ public class GridWorldLauncher extends Application {
     private static TextField initQValueMaxField;
     private static TextField exprWaitTimeField;
     private static TextField loadFileNameField;
+    private static TextField iterationsPerSimulationField;
+    private static TextField amountOfSimulationsField;
 
     private static Slider discountSlider;
 
     private static CheckBox enableEpisodicMode;
+    private static CheckBox enableAverageExperiment;
 
     private static Text loadFileStatusText;
     private static Text generalMessageText;
@@ -82,20 +84,43 @@ public class GridWorldLauncher extends Application {
         VBox simVars = new VBox(5);
         ScrollPane simulationElements = new ScrollPane(simVars);
 
-
         VBox experimentTypes = new VBox(5);
         ScrollPane experimentElements = new ScrollPane(experimentTypes);
         Text experimentTypesTitle = new Text("Experiments");
         experimentTypesTitle.setFont(new Font(18));
         experimentTypesTitle.setUnderline(true);
-        experimentTypes.getChildren().addAll(experimentTypesTitle);
         experimentTypes.setPadding(new Insets(5,5,5,5));
+
+        VBox averageExperimentPanel = new VBox(10);
+        averageExperimentPanel.setBorder(new Border(new BorderStroke(Color.BLACK,
+                BorderStrokeStyle.SOLID, CornerRadii.EMPTY, BorderWidths.DEFAULT)));
+        enableAverageExperiment = new CheckBox("Run As Experiment");
+        enableAverageExperiment.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                enableAverageExperimentClicked();
+            }
+        });
+        averageExperimentPanel.setPadding(new Insets(5,5,5,5));
+
 
         Text simulationElementsTitle = new Text("Simulation");
         simulationElementsTitle.setFont(new Font(18));
         simulationElementsTitle.setUnderline(true);
         simVars.getChildren().addAll(simulationElementsTitle);
         simVars.setPadding(new Insets(5,5,5,5));
+
+        HBox amountOfSimulations = new HBox(10);
+        Text amountOfSimulationsText = new Text("Amount of Simulations:");
+        amountOfSimulationsText.setFont(stdFont);
+        amountOfSimulationsField = new TextField("10");
+        amountOfSimulationsField.setDisable(true);
+
+        HBox amountOfIterations = new HBox(10);
+        iterationsPerSimulationField = new TextField("2500");
+        iterationsPerSimulationField.setDisable(true);
+        Text iterationsPerSimulationText = new Text("Iterations per Sim");
+        iterationsPerSimulationText.setFont(stdFont);
 
         HBox gridSizeX = new HBox(10);
         Text gridSizeXText = new Text("Grid size X value: ");
@@ -235,9 +260,14 @@ public class GridWorldLauncher extends Application {
         loadExistingEnv.getChildren().addAll(loadExistingEnvText, loadFileNameField, loadFileButton);
         endButtons.getChildren().addAll(startButton, creatorButton);
 
+        amountOfSimulations.getChildren().addAll(amountOfSimulationsText, amountOfSimulationsField);
+        amountOfIterations.getChildren().addAll(iterationsPerSimulationText, iterationsPerSimulationField);
+        averageExperimentPanel.getChildren().addAll(enableAverageExperiment, amountOfSimulations, amountOfIterations);
+
+
         graphicsVars.getChildren().addAll(gridCellSize, gridArrowSize, gridFontSize);
         simVars.getChildren().addAll(gridSizeX, gridSizeY, learningIterationSpeed, rewardCoordinate, startState, discountSliderText, discountSliderBox, enableEpisodicMode);
-        experimentTypes.getChildren().addAll(initQTitle, initialQValues, exprValueUpdateTime);
+        experimentTypes.getChildren().addAll(experimentTypesTitle, initQTitle, initialQValues, exprValueUpdateTime, averageExperimentPanel);
 
         scrollPanels.getChildren().addAll(graphicalElements, simulationElements, experimentElements);
 
@@ -261,6 +291,9 @@ public class GridWorldLauncher extends Application {
         initialQValues.setAlignment(Pos.TOP_CENTER);
         exprValueUpdateTime.setAlignment(Pos.TOP_CENTER);
         loadExistingEnv.setAlignment(Pos.TOP_CENTER);
+        averageExperimentPanel.setAlignment(Pos.TOP_CENTER);
+        amountOfIterations.setAlignment(Pos.TOP_CENTER);
+        amountOfSimulations.setAlignment(Pos.TOP_CENTER);
 
         GraphView.start();
 
@@ -337,6 +370,16 @@ public class GridWorldLauncher extends Application {
         gridSizeYField.setText("" + GridWorldModel.getInstance().getGridSizeY());
     }
 
+    public static void enableAverageExperimentClicked() {
+        if(enableAverageExperiment.isSelected()) {
+            iterationsPerSimulationField.setDisable(false);
+            amountOfSimulationsField.setDisable(false);
+        } else {
+            iterationsPerSimulationField.setDisable(true);
+            amountOfSimulationsField.setDisable(true);
+        }
+    }
+
     public static void setupGridModelFromVariables() {
         GridWorldModel model = GridWorldModel.getInstance();
 
@@ -369,6 +412,15 @@ public class GridWorldLauncher extends Application {
         GridWorldModel.getInstance().setEpisodic(enableEpisodicMode.isSelected());
 
         QLearningController.getInstance().setDiscountVariable(discountSlider.getValue());
+    }
+
+    public static void setupAverageExperiment() {
+        if(enableAverageExperiment.isSelected()) {
+            int simAmount = Integer.parseInt(amountOfSimulationsField.getText());
+            int iterAmount = Integer.parseInt(iterationsPerSimulationField.getText());
+            ExperimentationController.setupForAverageSim(simAmount, iterAmount);
+
+        }
     }
 
     public static void setupExperiments() {
@@ -449,6 +501,8 @@ class startGridWorldQLearningButtonHandler implements EventHandler<ActionEvent> 
         GridWorldView.getInstance().setupView(GridWorldLauncher.primaryStage);
 
         CurrentSimulationReference.controller = QLearningController.getInstance();
+
+        GridWorldLauncher.setupAverageExperiment();
 
         QLearningController.getInstance().setIterationSpeed(Integer.parseInt(GridWorldLauncher.learningIterationSpeedField.getCharacters().toString()));
         QLearningController.getInstance().startSimulation();

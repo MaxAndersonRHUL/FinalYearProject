@@ -7,20 +7,19 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Created by max on 04/12/2016.
  */
 public class Model implements Serializable{
 
-    public HashMap<StateIdentity, State> states;
+    public ConcurrentHashMap<StateIdentity, State> states;
 
     public int gridSizeX = 10;
     public int gridSizeY = 5;
 
     public Agent mainAgent;
-
-    private static Model instance;
 
     public State startingState;
 
@@ -28,8 +27,15 @@ public class Model implements Serializable{
 
     transient ExperimentableValue currentConvergencePercent = new ExperimentableValue(0.0, "Policy Accuracy (%)");
 
-    public Model() {
-        instance = this;
+
+    public void reset(ConcurrentHashMap<StateIdentity, State> newStates) {
+        states.clear();
+        StateIdentity ident = startingState.getStateIdentity();
+        mainAgent.resetActionsTaken();
+        mainAgent.forceSetCurrentState(newStates.get(ident));
+
+        startingState = newStates.get(ident);
+        states = newStates;
     }
 
     // Function for effective rounding of doubles from Stackoverflow user 'Jonik'
@@ -72,13 +78,6 @@ public class Model implements Serializable{
         states.remove(state);
     }
 
-    public static Model getInstance() {
-        if (instance == null) {
-            instance = new Model();
-        }
-        return instance;
-    }
-
     public boolean canStateTransitionTo(State srcState, State dstState) {
         return getStateTransitionTo(srcState, dstState) != null;
     }
@@ -118,8 +117,10 @@ public class Model implements Serializable{
 
     // Used to find how close the current model has converged on the true policy. Finding the hashmap from state identities
     // to actions that form the optimal policy can be found via the ValueIterationController.
-
-    public double calculateCurrentConvergancePercent(HashMap<StateIdentity, List<Action>> actionsChosen) {
+    // ValueIteration and calculating the policy accuracy in this way only works for non-procedural environments. That is to say,
+    // only environments where all states and actions are defined before starting to simulate. XO world, for example, is
+    // procedural as the states are created as the agent discovers them.
+    public double calculateCurrentPolicyAccuracyPercent(HashMap<StateIdentity, List<Action>> actionsChosen) {
         if(CurrentSimulationReference.controller == null) {
             return 0.0;
         }
@@ -127,24 +128,20 @@ public class Model implements Serializable{
         int totalActions = 0;
         for(State state : states.values()) {
             totalActions++;
-
             List<Action> actionChosen = actionsChosen.get(state.getStateIdentity());
-
             if(actionChosen == null) {
                 continue;
             }
-
             List<Action> highestActions = state.getHighestActionValuesToPrecision(convergenceCheckPrecision);
 
             if(highestActions.size() != actionChosen.size()) {
                 continue;
             }
-
             boolean complete = true;
             for(Action nsAction : actionChosen) {
                 boolean contained = false;
                 for(Action nbAction : highestActions) {
-                    if(nsAction == nbAction) {
+                    if(nsAction.equals(nbAction)) {
                         contained = true;
                         break;
                     }
@@ -160,6 +157,7 @@ public class Model implements Serializable{
         }
 
         double percent = (double) numberOfCorrectActions / (double)totalActions;
+
 
         currentConvergencePercent.setValue(percent);
 
@@ -183,7 +181,7 @@ public class Model implements Serializable{
         return mainAgent;
     }
 
-    public HashMap<StateIdentity, State> getStates() {
+    public ConcurrentHashMap<StateIdentity, State> getStates() {
         return states;
     }
 

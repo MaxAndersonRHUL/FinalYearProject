@@ -81,4 +81,25 @@ public class Action implements Serializable{
         this.active = active;
     }
 
+    @Override
+    public int hashCode() {
+        int hash = 23;
+        for(State state : resultingStates.keySet()) {
+            hash = hash * 31 + state.hashCode();
+        }
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if(o instanceof Action) {
+            for(State state : resultingStates.keySet()) {
+                if(!((Action) o).resultingStates.keySet().contains(state)) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
 }

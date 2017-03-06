@@ -12,11 +12,30 @@ public abstract class Controller {
     private long totalIterations = 0;
     private ConcurrentLinkedDeque<Integer> forAverageIterationRate = new ConcurrentLinkedDeque<Integer>();
 
+    public long finishAfterIterations = -1;
+
     public boolean executionPaused = false;
 
     public boolean deterministicEnvironment = true;
 
     private boolean pureRandomMode;
+
+    private boolean simRunning = true;
+
+    public void setAmountOfIterationsToCompute(long iters) {
+        finishAfterIterations = iters;
+    }
+
+    public void reset() {
+        totalIterations = 0;
+    }
+
+
+    public void resumeEndedSimulation() {
+        executionPaused = false;
+        simRunning = true;
+    }
+
 
     public void stepSimulation() {
 
@@ -35,8 +54,8 @@ public abstract class Controller {
         }
 
         State result = CurrentSimulationReference.model.decideActionChoiceResult(learningChoice);
-        Model.getInstance().mainAgent.doAction(learningChoice);
-        Model.getInstance().mainAgent.forceSetCurrentState(result);
+        CurrentSimulationReference.model.mainAgent.doAction(learningChoice);
+        CurrentSimulationReference.model.mainAgent.forceSetCurrentState(result);
         //Model.getInstance().mainAgent.currentState = result;
 
         updateAgentLearningValues();
@@ -83,7 +102,10 @@ public abstract class Controller {
 
     public void pauseExecution() {
         executionPaused = true;
+    }
 
+    public void finishedSimulation() {
+        ExperimentationController.simFinished();
     }
 
     protected abstract Action makeActionChoice();
@@ -108,7 +130,7 @@ public abstract class Controller {
     public void startSimulation() {
             new Thread() {
                 public void run() {
-                    while (true) {
+                    while (simRunning) {
                         long now = System.nanoTime();
                         long updateLength = now - timeSaveTemp;
                         addValueToRateList((int) (1 / ((now - timeSaveTemp) / 1000000000.0)));
@@ -120,6 +142,11 @@ public abstract class Controller {
                             } catch (InterruptedException e) {
                                 e.printStackTrace();
                             }
+                        }
+
+                        if(totalIterations == finishAfterIterations) {
+                            finishedSimulation();
+                            continue;
                         }
 
                         if(!executionPaused) {
