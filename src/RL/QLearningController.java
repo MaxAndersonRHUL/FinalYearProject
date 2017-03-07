@@ -115,6 +115,9 @@ public class QLearningController extends Controller{
         */
 
         int indexChosen = Probability.randomChooseFromDoubleArray(kPowerActionValues);
+        if(indexChosen == -1) {
+            return model.moveAgentRandom();
+        }
         return activeActions.get(indexChosen);
 
         //return null;

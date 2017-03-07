@@ -275,7 +275,7 @@ public class GridWorldView extends View{
             // adjacent states transitions to also be redrawn.
             drawAdjacentTransitions(agentLastDrawnState.getStateIdentity(), canvas);
         if(ValueIterationController.getInstance().actionsChosen != null) {
-            currentConvergence.setText("Policy Accuracy: " + decimal2.format(CurrentSimulationReference.model.calculateCurrentPolicyAccuracyPercent(ValueIterationController.getInstance().actionsChosen)) + "%");
+            currentConvergence.setText("Policy Accuracy: " + decimal2.format(CurrentSimulationReference.model.currentConvergencePercent.getValue().doubleValue()) + "%");
         }
     }
 

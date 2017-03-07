@@ -237,16 +237,9 @@ public class GraphView {
                     currentX = iterX.next();
                 }
             }
-
-            Platform.runLater(new Runnable() {
-                @Override
-                public void run() {
-                    series.getData().addAll(dataList);
-                    //lineChart.getData().clear();
-                    lineChart.getData().setAll(series);
-                    //lineChart.getData().add(series);
-                }
-            });
+            series.getData().addAll(dataList);
+            //lineChart.getData().clear();
+            lineChart.getData().setAll(series);
 
         }
     }

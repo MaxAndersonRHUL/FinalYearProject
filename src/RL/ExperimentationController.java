@@ -60,9 +60,10 @@ public class ExperimentationController {
     }
     */
 
-    private static void setExprValuesToZero() {
+    // Resets values to the value they were first recorded at.
+    private static void setExprValuesToOrigional() {
         for(ExperimentableValue val : exprValues.getLast().keySet()) {
-            val.setValue(0.0);
+            val.setValue(exprValues.getFirst().get(val).getFirst().getValue());
         }
     }
 
@@ -72,7 +73,7 @@ public class ExperimentationController {
         Cloner cloner = new Cloner();
         GridWorldModel.getInstance().reset(cloner.deepClone(initialEnvironmentState));
 
-        setExprValuesToZero();
+        setExprValuesToOrigional();
 
         CurrentSimulationReference.controller.resumeEndedSimulation();
 

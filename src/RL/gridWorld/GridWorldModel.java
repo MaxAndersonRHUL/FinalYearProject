@@ -11,6 +11,9 @@ public class GridWorldModel extends Model {
 
     static GridWorldModel instance;
 
+    public int gridSizeX = 10;
+    public int gridSizeY = 5;
+
     private boolean isEpisodic = false;
 
     public static GridWorldModel getInstance() {
@@ -23,6 +26,11 @@ public class GridWorldModel extends Model {
     @Override
     public void stateChanged() {
         super.stateChanged();
+        if(ValueIterationController.getInstance().actionsChosen != null) {
+            if (CurrentSimulationReference.controller.getTotalIterations() % 5 == 0) {
+                currentConvergencePercent.setValue(calculateCurrentPolicyAccuracyPercent(ValueIterationController.getInstance().actionsChosen));
+            }
+        }
         if (isEpisodic) {
             if (getAgent().getCurrentState().getReward() != 0) {
                 getAgent().forceSetCurrentState(startingState);

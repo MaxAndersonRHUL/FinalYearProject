@@ -16,16 +16,13 @@ public class Model implements Serializable{
 
     public ConcurrentHashMap<StateIdentity, State> states;
 
-    public int gridSizeX = 10;
-    public int gridSizeY = 5;
-
     public Agent mainAgent;
 
     public State startingState;
 
     int convergenceCheckPrecision = 2;
 
-    transient ExperimentableValue currentConvergencePercent = new ExperimentableValue(0.0, "Policy Accuracy (%)");
+    transient public ExperimentableValue currentConvergencePercent = new ExperimentableValue(0.0, "Policy Accuracy (%)");
 
 
     public void reset(ConcurrentHashMap<StateIdentity, State> newStates) {

@@ -18,6 +18,7 @@ public class ValueIterationController {
     public HashMap<StateIdentity, State> states;
     public HashMap<StateIdentity, Double> stateValues;
     public HashMap<StateIdentity, List<Action>> actionsChosen;
+    public HashMap<StateIdentity, Double> changesThisIteration;
 
     private int currentIterations = 0;
 
@@ -68,7 +69,7 @@ public class ValueIterationController {
             double stateValue = calculateStochasticValueOfState(keyVal.getValue());
 
             if(round(stateValue) != round(stateValues.get(keyVal.getKey()))) {
-                stateValues.replace(keyVal.getKey(), stateValue);
+                changesThisIteration.put(keyVal.getKey(), stateValue);
                 valueChanged = true;
             }
         }
@@ -78,14 +79,16 @@ public class ValueIterationController {
     private double calculateStochasticValueOfState(State state) {
         double currentMax = -1;
 
+        /*
         if(state.getReward() > 0) {
             return state.getReward();
         }
+        */
 
         for(Action action : state.getActions()) {
             double totalEstValueForAllPossibleActions = 0.0;
             for(Map.Entry<State, Probability> possibleResult : action.getResultingStates().entrySet()) {
-                double calc = learningValue * stateValues.get(possibleResult.getKey().getStateIdentity());
+                double calc = (learningValue * stateValues.get(possibleResult.getKey().getStateIdentity())) + state.getReward();
                 totalEstValueForAllPossibleActions += possibleResult.getValue().probab * (calc);
             }
 
@@ -146,6 +149,7 @@ public class ValueIterationController {
         boolean valueChanged = false;
         for(Map.Entry<StateIdentity, State> keyVal : states.entrySet()) {
 
+
             if(keyVal.getValue().actions.size() == 0) {
                 continue;
             }
@@ -154,11 +158,17 @@ public class ValueIterationController {
                 newVal = (highestVal * learningValue) + keyVal.getValue().getReward();
 
             if(round(newVal) != round(stateValues.get(keyVal.getKey()))) {
-                stateValues.replace(keyVal.getKey(), newVal);
+                changesThisIteration.put(keyVal.getKey(), newVal);
                 valueChanged = true;
             }
         }
         return valueChanged;
+    }
+
+    private void integrateIterationChanges() {
+        for(Map.Entry<StateIdentity, Double> changesEntry : changesThisIteration.entrySet()) {
+            stateValues.replace(changesEntry.getKey(), changesEntry.getValue());
+        }
     }
 
     private double getLargestValueFromState(State state) {
@@ -197,11 +207,12 @@ public class ValueIterationController {
         Random rand = new Random();
         stateValues = new HashMap<>();
         actionsChosen = new HashMap<>();
+        changesThisIteration = new HashMap<>();
         for(Map.Entry<StateIdentity, State> keyVal : states.entrySet()) {
             if(keyVal.getValue().actions.size() == 0) {
                 continue;
             }
-            stateValues.put(keyVal.getKey(), rand.nextDouble());
+            stateValues.put(keyVal.getKey(), keyVal.getValue().reward);
         }
     }
 
@@ -252,7 +263,12 @@ public class ValueIterationController {
                             finishedCalculatingStochastic();
                         }
                     }
+
+                    integrateIterationChanges();
+
+
                     currentIterations++;
+
 
                     /*
                     try {
