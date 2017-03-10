@@ -19,8 +19,6 @@ import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
-import java.util.Random;
-
 /**
  * Created by max on 17/10/2016.
  */
@@ -430,17 +428,17 @@ public class GridWorldLauncher extends Application {
         double minQ = Double.parseDouble(initQValueMinField.getText());
         double maxQ = Double.parseDouble(initQValueMaxField.getText());
 
+        if(maxQ == 0) {
+            return;
+        }
+
         if(minQ > maxQ) {
             GridWorldLauncher.displayError("Q Value min is greater than Q Value max");
         } else {
-            Random random = new Random();
-            for(State state : GridWorldModel.getInstance().getStates().values()) {
-                for(Action action : state.getActions()) {
-                    action.setValue(minQ + (maxQ - minQ) * random.nextDouble());
-                }
-            }
-
+            CurrentSimulationReference.model.randomiseQValues(minQ, maxQ);
+            ExperimentationController.rememberRandomizedQValues(minQ, maxQ);
         }
+
     }
 }
 

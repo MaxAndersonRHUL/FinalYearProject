@@ -22,7 +22,7 @@ public class Model implements Serializable{
 
     int convergenceCheckPrecision = 2;
 
-    transient public ExperimentableValue currentConvergencePercent = new ExperimentableValue(0.0, "Policy Accuracy (%)");
+    transient public ExperimentableValue currentConvergencePercent = new ExperimentableValue(Double.NaN, "Policy Accuracy (%)");
 
 
     public void reset(ConcurrentHashMap<StateIdentity, State> newStates) {
@@ -33,6 +33,16 @@ public class Model implements Serializable{
 
         startingState = newStates.get(ident);
         states = newStates;
+    }
+
+    public void randomiseQValues(double minValue, double maxValue) {
+            Random random = new Random();
+            for(State state : states.values()) {
+                for(Action action : state.getActions()) {
+                    action.setValue(minValue + (maxValue - minValue) * random.nextDouble());
+                }
+            }
+
     }
 
     // Function for effective rounding of doubles from Stackoverflow user 'Jonik'

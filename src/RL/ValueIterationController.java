@@ -150,12 +150,14 @@ public class ValueIterationController {
         for(Map.Entry<StateIdentity, State> keyVal : states.entrySet()) {
 
 
-            if(keyVal.getValue().actions.size() == 0) {
-                continue;
-            }
             double newVal = 0;
-            double highestVal = getLargestValueFromState(keyVal.getValue());
+
+            if(keyVal.getValue().actions.size() == 0) {
+                newVal = keyVal.getValue().getReward();
+            } else {
+                double highestVal = getLargestValueFromState(keyVal.getValue());
                 newVal = (highestVal * learningValue) + keyVal.getValue().getReward();
+            }
 
             if(round(newVal) != round(stateValues.get(keyVal.getKey()))) {
                 changesThisIteration.put(keyVal.getKey(), newVal);
@@ -209,9 +211,6 @@ public class ValueIterationController {
         actionsChosen = new HashMap<>();
         changesThisIteration = new HashMap<>();
         for(Map.Entry<StateIdentity, State> keyVal : states.entrySet()) {
-            if(keyVal.getValue().actions.size() == 0) {
-                continue;
-            }
             stateValues.put(keyVal.getKey(), keyVal.getValue().reward);
         }
     }

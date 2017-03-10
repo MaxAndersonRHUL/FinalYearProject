@@ -30,6 +30,11 @@ public class ExperimentationController {
 
     private static boolean runningAverageSimulation = false;
 
+    private static boolean qValuesRandomized = false;
+
+    private static double minRandomValue;
+    private static double maxRandomValue;
+
     // This data structure is a list of hashmaps. The hash maps map experimentable values to a list of records that
     // this controller has recorded. Since more than 1 simulation can run and the results averaged, the map is in a list.
     // Each entry to the outer most list is a full simulation. When only running 1 simulation and not averaging results,
@@ -67,11 +72,23 @@ public class ExperimentationController {
         }
     }
 
+    public static void rememberRandomizedQValues(double minRandom, double maxRandom) {
+        minRandomValue = minRandom;
+        maxRandomValue = maxRandom;
+
+        qValuesRandomized = true;
+    }
+
     public static void fullSimulationResetGridWorldQ() {
         GridWorldView.getInstance().pauseRedrawExecution();
         QLearningController.getInstance().reset();
         Cloner cloner = new Cloner();
+
         GridWorldModel.getInstance().reset(cloner.deepClone(initialEnvironmentState));
+
+        if(qValuesRandomized) {
+            GridWorldModel.getInstance().randomiseQValues(minRandomValue, maxRandomValue);
+        }
 
         setExprValuesToOrigional();
 
@@ -121,7 +138,7 @@ public class ExperimentationController {
         for(ExperimentableValue exprValue : exprValues.getFirst().keySet()) {
             ExperimentableValue newAveragedValue = new ExperimentableValue(0, exprValue.getName() + " Averaged over " + totalExperimentsTodo + " tests");
             //averagedExprValues.add(newAveragedValue);
-            ConcurrentLinkedDeque newListOfRecords =  new ConcurrentLinkedDeque<>();
+            ConcurrentLinkedDeque<VariableRecord> newListOfRecords =  new ConcurrentLinkedDeque<>();
             exprValues.getLast().put(newAveragedValue, newListOfRecords);
             ArrayList<Iterator<VariableRecord>> exprIterators = new ArrayList<>();
             for(HashMap<ExperimentableValue, ConcurrentLinkedDeque<VariableRecord>> map : exprValues) {
@@ -144,6 +161,8 @@ public class ExperimentationController {
                 newListOfRecords.add(new VariableRecord(averageForThisIteration, lastRecordFound.getIterationsRecordedOn()));
                 currentIterationBeingCalculated++;
             }
+            newAveragedValue.setAmountOfRecords(newListOfRecords.size());
+            newAveragedValue.setValue(newListOfRecords.getLast().getValue());
         }
     }
 
@@ -243,6 +262,11 @@ public class ExperimentationController {
         currentIterCounter = 0;
         calculateCalculableExprValues();
         for (Map.Entry<ExperimentableValue, ConcurrentLinkedDeque<VariableRecord>> entry : exprValues.getLast().entrySet()) {
+            // A NaN value can be used to communicate that the first instance of the value has not yet been set,
+            // and so should not be recorded.
+            if(Double.isNaN(entry.getKey().getValue().doubleValue())) {
+                continue;
+            }
             entry.getValue().add(new VariableRecord(entry.getKey().getValue(), CurrentSimulationReference.controller.getTotalIterations()));
             entry.getKey().setAmountOfRecords(entry.getValue().size());
         }
